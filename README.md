@@ -260,4 +260,5 @@ you might kill all ros nodes and the ros core by
 rosnode kill -a    # kill all ros nodes
 killall rosmaster  # kill ros core
 ```
+
 Please note, that this kills all ros processes, not just those required for sick_line_guidance.

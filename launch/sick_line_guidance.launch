@@ -1,0 +1,31 @@
+<launch>
+
+  <!-- sick_line_guidance: global configuration -->
+  <arg name="yaml"/>
+  <rosparam command="load" file="$(find sick_line_guidance)/$(arg yaml)" />                    <!-- Global CAN configuration by ols or mls yaml-file incl. link to eds-file -->
+  
+  <!-- sick_line_guidance: run canopen_chain_node -->
+  <node name="sick_line_guidance_can_chain_node" pkg="sick_line_guidance" type="sick_line_guidance_can_chain_node" >
+    <rosparam command="load" file="$(find sick_line_guidance)/$(arg yaml)" />                 <!-- Private CAN configuration for canopen_chain_node by ols or mls yaml-file -->
+    <param name="diagnostic_topic" type="str" value="diagnostics" />                          <!-- ROS topic for diagnostic messages -->
+  </node>
+
+  <!-- sick_line_guidance: run sick_line_guidance_node, which implements the ROS driver for OLS and MLS -->
+  <node name="sick_line_guidance_node" pkg="sick_line_guidance" type="sick_line_guidance_node" >
+    <param name="diagnostic_topic" type="str" value="diagnostics" />                           <!-- ROS topic for diagnostic messages -->
+    <param name="can_connect_init_at_startup" type="bool" value="true" />                      <!-- Additional CAN configuration: if true, canopen services are initialized at startup -->
+    <param name="initial_sensor_state" type="int" value="7" />                                 <!-- initial sensor states (f.e. 0x07 for 3 detected lines, or 8 to indicate sensor error) -->
+    <param name="subscribe_queue_size" type="int" value="16" />                                <!-- buffer size for ros messages -->
+  </node>
+
+  <!-- sick_line_guidance: cloud_publisher_node to convert OLS_Measurement and MLS_Measurement messages to PointCloud2 -->
+  <node name="sick_line_guidance_cloud_publisher" pkg="sick_line_guidance" type="sick_line_guidance_cloud_publisher" >
+    <param name="mls_topic_publish" type="str" value="mls" />                                  <!-- MLS_Measurement data are published in topic "/mls" -->
+    <param name="ols_topic_publish" type="str" value="ols" />                                  <!-- OLS_Measurement data are published in topic "/ols" -->
+    <param name="cloud_topic_publish" type="str" value="cloud" />                              <!-- sensor_msgs::PointCloud messages are published in topic "/cloud" -->
+    <param name="mls_cloud_frame_id" type="str" value="mls_frame" />                           <!-- MLS PointCloud data are published with frame id "mls_frame" -->
+    <param name="ols_cloud_frame_id" type="str" value="ols_frame" />                           <!-- OLS PointCloud data are published with frame id "ols_frame" -->
+    <param name="subscribe_queue_size" type="int" value="1" />                                 <!-- buffer size for ros messages -->
+  </node>
+
+</launch>

@@ -1,0 +1,9 @@
+<launch>
+
+  <!-- sick_line_guidance: run ros2can_node support tool, converts ros messages to can messages -->
+  <node name="sick_line_guidance_ros2can_node" pkg="sick_line_guidance" type="sick_line_guidance_ros2can_node" />
+  <param name="can_device" type="str" value="can0" />       <!-- name of can net device (socketcan interface) -->
+  <param name="ros_topic" type="str" value="ros2can0" />    <!--  topic for ros messages (input), message type can_msgs::Frame -->
+  <param name="subscribe_queue_size" type="int" value="32" />    <!-- buffer size for ros messages -->
+
+</launch>

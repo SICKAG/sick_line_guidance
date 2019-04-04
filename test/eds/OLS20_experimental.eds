@@ -1,0 +1,787 @@
+
+; This EDS file was created by the CANopen Design Tool 2.3.19.0.
+; port GmbH Halle/Saale Germany, http://www.port.de, mailto:service@port.de
+; DefaultValues added by rostest.
+
+[FileInfo]
+FileName=OLS20.eds
+FileVersion=1
+FileRevision=1
+EDSVersion=4.0
+Description=Optical Line Guidance
+CreationTime=09:08AM
+CreationDate=08-15-2018
+CreatedBy=herrmra
+ModificationTime=10:51AM
+ModificationDate=12-03-2018
+ModifiedBy=rostest
+
+[DeviceInfo]
+VendorName=SICK AG
+VendorNumber=0x01000056
+ProductName=OLS20
+ProductNumber=0x00001004
+RevisionNumber=1
+OrderCode=-
+BaudRate_10=1
+BaudRate_20=1
+BaudRate_50=1
+BaudRate_125=1
+BaudRate_250=1
+BaudRate_500=1
+BaudRate_800=0
+BaudRate_1000=1
+DynamicChannelsSupported=0
+GroupMessaging=0
+LSS_Supported=1
+Granularity=8
+SimpleBootUpSlave=1
+SimpleBootUpMaster=0
+NrOfRXPDO=0
+NrOfTXPDO=2
+
+[Comments]
+Lines=0
+
+[DummyUsage]
+Dummy0001=0
+Dummy0002=0
+Dummy0003=0
+Dummy0004=0
+Dummy0005=0
+Dummy0006=0
+Dummy0007=0
+
+[MandatoryObjects]
+SupportedObjects=3
+1=0x1000
+2=0x1001
+3=0x1018
+
+[OptionalObjects]
+SupportedObjects=16
+1=0x1005
+2=0x1008
+3=0x1009
+4=0x100A
+5=0x100C
+6=0x100D
+7=0x1014
+8=0x1015
+9=0x1016
+10=0x1017
+11=0x1200
+12=0x1800
+13=0x1801
+14=0x1A00
+15=0x1A01
+16=0x1F80
+
+[ManufacturerObjects]
+SupportedObjects=6
+1=0x2001
+2=0x2002
+3=0x2003
+4=0x2018
+5=0x2019
+6=0x2021
+
+[1000]
+ParameterName=Device Type
+ObjectType=0x07
+DataType=0x0007
+AccessType=const
+DefaultValue=0x0000000
+PDOMapping=0
+
+[1001]
+ParameterName=Error Register
+ObjectType=0x07
+DataType=0x0005
+AccessType=ro
+PDOMapping=0
+
+[1005]
+ParameterName=COB-ID SYNC
+ObjectType=0x07
+DataType=0x0007
+AccessType=rw
+PDOMapping=0
+
+[1008]
+ParameterName=Manufacturer Device Name
+ObjectType=0x07
+DataType=0x0009
+AccessType=const
+PDOMapping=0
+
+[1009]
+ParameterName=Manufacturer Hardware Version
+ObjectType=0x07
+DataType=0x0009
+AccessType=const
+PDOMapping=0
+
+[100A]
+ParameterName=Manufacturer Software Version
+ObjectType=0x07
+DataType=0x0009
+AccessType=const
+PDOMapping=0
+
+[100C]
+ParameterName=Guard Time
+ObjectType=0x07
+DataType=0x0006
+AccessType=rw
+PDOMapping=0
+
+[100D]
+ParameterName=Life Time Factor
+ObjectType=0x07
+DataType=0x0005
+AccessType=rw
+PDOMapping=0
+
+[1014]
+ParameterName=COB-ID EMCY
+ObjectType=0x07
+DataType=0x0007
+AccessType=rw
+PDOMapping=0
+
+[1015]
+ParameterName=Inhibit Time Emergency
+ObjectType=0x07
+DataType=0x0006
+AccessType=rw
+DefaultValue=0x0000
+PDOMapping=0
+
+[1016]
+SubNumber=3
+ParameterName=Heartbeat Consumer Entries
+ObjectType=0x08
+
+[1016sub0]
+ParameterName=Highest sub-index supported
+ObjectType=0x07
+DataType=5
+AccessType=const
+DefaultValue=0x02
+PDOMapping=0
+
+[1016sub1]
+ParameterName=Consumer Heartbeat Time 1
+ObjectType=0x07
+DataType=0x0007
+AccessType=rw
+PDOMapping=0
+
+[1016sub2]
+ParameterName=Consumer Heartbeat Time 2
+ObjectType=0x07
+DataType=0x0007
+AccessType=rw
+PDOMapping=0
+
+[1017]
+ParameterName=Producer Heartbeat Time
+ObjectType=0x07
+DataType=0x0006
+AccessType=rw
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1018]
+SubNumber=5
+ParameterName=Identity Object
+ObjectType=0x09
+
+[1018sub0]
+ParameterName=number of entries
+ObjectType=0x07
+DataType=0x0005
+AccessType=const
+DefaultValue=0x4
+PDOMapping=0
+
+[1018sub1]
+ParameterName=Vendor Id
+ObjectType=0x07
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x01000056
+PDOMapping=0
+
+[1018sub2]
+ParameterName=Product Code
+ObjectType=0x07
+DataType=0x0007
+AccessType=ro
+PDOMapping=0
+
+[1018sub3]
+ParameterName=Revision number
+ObjectType=0x07
+DataType=0x0007
+AccessType=ro
+PDOMapping=0
+
+[1018sub4]
+ParameterName=Serial number
+ObjectType=0x07
+DataType=0x0007
+AccessType=ro
+PDOMapping=0
+
+[1200]
+SubNumber=3
+ParameterName=Server SDO Parameter 1
+ObjectType=0x09
+
+[1200sub0]
+ParameterName=Highest sub-index supported
+ObjectType=0x07
+DataType=0x0005
+AccessType=const
+DefaultValue=0x02
+PDOMapping=0
+
+[1200sub1]
+ParameterName=COB-ID Client -> Server
+ObjectType=0x07
+DataType=0x0007
+AccessType=ro
+PDOMapping=0
+
+[1200sub2]
+ParameterName=COB-ID Server -> Client
+ObjectType=0x07
+DataType=0x0007
+AccessType=ro
+PDOMapping=0
+
+[1800]
+SubNumber=6
+ParameterName=Transmit PDO Communication Parameter 1
+ObjectType=0x09
+
+[1800sub0]
+ParameterName=Highest sub-index supported
+ObjectType=0x07
+DataType=0x0005
+AccessType=const
+DefaultValue=0x05
+PDOMapping=0
+LowLimit=0x2
+HighLimit=0x6
+
+[1800sub1]
+ParameterName=COB-ID
+ObjectType=0x07
+DataType=0x0007
+AccessType=rw
+DefaultValue=$NODEID+0x180
+PDOMapping=0
+LowLimit=0x00000001
+HighLimit=0xFFFFFFFF
+
+[1800sub2]
+ParameterName=Transmission Type
+ObjectType=0x07
+DataType=0x0005
+AccessType=rw
+DefaultValue=0xFF
+PDOMapping=0
+LowLimit=0x0
+HighLimit=0xFF
+
+[1800sub3]
+ParameterName=Inhibit Time
+ObjectType=0x07
+DataType=0x0006
+AccessType=rw
+DefaultValue=0x0
+PDOMapping=0
+LowLimit=0x0000
+HighLimit=0xFFFF
+
+[1800sub4]
+ParameterName=Compatibility Entry
+ObjectType=0x07
+DataType=0x0005
+AccessType=rw
+DefaultValue=0x00
+PDOMapping=0
+LowLimit=0x00
+HighLimit=0xFF
+
+[1800sub5]
+ParameterName=Event Timer
+ObjectType=0x07
+DataType=0x0006
+AccessType=rw
+DefaultValue=0x14
+PDOMapping=0
+LowLimit=0x0
+HighLimit=0xFFFF
+
+[1801]
+SubNumber=6
+ParameterName=Transmit PDO Communication Parameter 2
+ObjectType=0x09
+
+[1801sub0]
+ParameterName=Highest sub-index supported
+ObjectType=0x07
+DataType=0x0005
+AccessType=const
+DefaultValue=0x05
+PDOMapping=0
+LowLimit=0x02
+HighLimit=0x06
+
+[1801sub1]
+ParameterName=COB-ID
+ObjectType=0x07
+DataType=0x0007
+AccessType=rw
+DefaultValue=$NODEID+0x280
+PDOMapping=0
+LowLimit=0x00000001
+HighLimit=0xFFFFFFFF
+
+[1801sub2]
+ParameterName=Transmission Type
+ObjectType=0x07
+DataType=0x0005
+AccessType=rw
+DefaultValue=0xFF
+PDOMapping=0
+LowLimit=0x0
+HighLimit=0xFF
+
+[1801sub3]
+ParameterName=Inhibit Time
+ObjectType=0x07
+DataType=0x0006
+AccessType=rw
+DefaultValue=0x0
+PDOMapping=0
+LowLimit=0x0000
+HighLimit=0xFFFF
+
+[1801sub4]
+ParameterName=Compatibility Entry
+ObjectType=0x07
+DataType=0x0005
+AccessType=rw
+DefaultValue=0x00
+PDOMapping=0
+LowLimit=0x00
+HighLimit=0xFF
+
+[1801sub5]
+ParameterName=Event Timer
+ObjectType=0x07
+DataType=0x0006
+AccessType=rw
+DefaultValue=0x14
+PDOMapping=0
+LowLimit=0x0
+HighLimit=0xFFFF
+
+[1A00]
+SubNumber=9
+ParameterName=Transmit PDO Mapping Parameter 1
+ObjectType=0x09
+
+[1A00sub0]
+ParameterName=Number of mapped objects
+ObjectType=0x07
+DataType=0x0005
+AccessType=rw
+DefaultValue=0x00
+PDOMapping=0
+LowLimit=0x00
+HighLimit=0x08
+
+[1A00sub1]
+ParameterName=Mapping Entry 1
+ObjectType=0x07
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1A00sub2]
+ParameterName=Mapping Entry 2
+ObjectType=0x07
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1A00sub3]
+ParameterName=Mapping Entry 3
+ObjectType=0x07
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1A00sub4]
+ParameterName=Mapping Entry 4
+ObjectType=0x07
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1A00sub5]
+ParameterName=Mapping Entry 5
+ObjectType=0x07
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1A00sub6]
+ParameterName=Mapping Entry 6
+ObjectType=0x07
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1A00sub7]
+ParameterName=Mapping Entry 7
+ObjectType=0x07
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1A00sub8]
+ParameterName=Mapping Entry 8
+ObjectType=0x07
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1A01]
+SubNumber=9
+ParameterName=Transmit PDO Mapping Parameter 2
+ObjectType=0x09
+
+[1A01sub0]
+ParameterName=Number of mapped objects
+ObjectType=0x07
+DataType=0x0005
+AccessType=rw
+DefaultValue=0x00
+PDOMapping=0
+LowLimit=0x0
+HighLimit=0x8
+
+[1A01sub1]
+ParameterName=Mapping Entry 1
+ObjectType=0x07
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1A01sub2]
+ParameterName=Mapping Entry 2
+ObjectType=0x07
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1A01sub3]
+ParameterName=Mapping Entry 3
+ObjectType=0x07
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1A01sub4]
+ParameterName=Mapping Entry 4
+ObjectType=0x07
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1A01sub5]
+ParameterName=Mapping Entry 5
+ObjectType=0x07
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1A01sub6]
+ParameterName=Mapping Entry 6
+ObjectType=0x07
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1A01sub7]
+ParameterName=Mapping Entry 7
+ObjectType=0x07
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1A01sub8]
+ParameterName=Mapping Entry 8
+ObjectType=0x07
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1F80]
+ParameterName=NMT Startup
+ObjectType=0x07
+DataType=0x0007
+AccessType=const
+PDOMapping=0
+LowLimit=0x0
+HighLimit=0x3F
+
+[2001]
+SubNumber=6
+ParameterName=Mounting parameters
+ObjectType=0x09
+
+[2001sub0]
+ParameterName=numOfEntries
+ObjectType=0x07
+DataType=0x0005
+AccessType=const
+DefaultValue=0x5
+PDOMapping=0
+
+[2001sub1]
+ParameterName=reserved1
+ObjectType=0x07
+DataType=0x0007
+AccessType=ro
+PDOMapping=0
+
+[2001sub2]
+ParameterName=reserved2
+ObjectType=0x07
+DataType=0x0007
+AccessType=ro
+PDOMapping=0
+
+[2001sub3]
+ParameterName=reserved3
+ObjectType=0x07
+DataType=0x0007
+AccessType=ro
+PDOMapping=0
+
+[2001sub4]
+ParameterName=reserved4
+ObjectType=0x07
+DataType=0x0007
+AccessType=ro
+PDOMapping=0
+
+[2001sub5]
+ParameterName=sensorFlipped
+ObjectType=0x07
+DataType=0x0005
+AccessType=rw
+DefaultValue=0x00
+PDOMapping=0
+LowLimit=0x0
+HighLimit=0xFF
+
+[2002]
+SubNumber=4
+ParameterName=Tape Parameters
+ObjectType=0x09
+
+[2002sub0]
+ParameterName=Number of mapped objects
+ObjectType=0x07
+DataType=0x0005
+AccessType=const
+DefaultValue=0x3
+PDOMapping=0
+
+[2002sub1]
+ParameterName=Typ. Width
+ObjectType=0x07
+DataType=0x0008
+AccessType=rw
+PDOMapping=0
+
+[2002sub2]
+ParameterName=Min. Width
+ObjectType=0x07
+DataType=0x0008
+AccessType=rw
+PDOMapping=0
+
+[2002sub3]
+ParameterName=Max. Width
+ObjectType=0x07
+DataType=0x0008
+AccessType=rw
+PDOMapping=0
+
+[2003]
+SubNumber=3
+ParameterName=Advanced Settings
+ObjectType=0x09
+
+[2003sub0]
+ParameterName=Number of mapped objects
+ObjectType=0x07
+DataType=0x0005
+AccessType=const
+DefaultValue=0x2
+PDOMapping=0
+
+[2003sub1]
+ParameterName=Off Delay Track Detection
+ObjectType=0x07
+DataType=0x0006
+AccessType=rw
+DefaultValue=0x0064
+PDOMapping=0
+LowLimit=0x0
+HighLimit=0xFFFF
+
+[2003sub2]
+ParameterName=Off Delay Code Detection
+ObjectType=0x07
+DataType=0x0006
+AccessType=rw
+DefaultValue=0x0064
+PDOMapping=0
+LowLimit=0x0
+HighLimit=0xFFFF
+
+[2018]
+ParameterName=Device Status
+ObjectType=0x07
+DataType=0x0005
+AccessType=ro
+PDOMapping=0
+
+[2019]
+ParameterName=Order number
+ObjectType=0x07
+DataType=0x0007
+AccessType=ro
+PDOMapping=0
+
+[2021]
+SubNumber=10
+ParameterName=Result data (LCPs)
+ObjectType=0x09
+
+[2021sub0]
+ParameterName=Number of mapped objects
+ObjectType=0x07
+DataType=0x0005
+AccessType=const
+DefaultValue=0x9
+PDOMapping=0
+
+[2021sub1]
+ParameterName=LCP1
+ObjectType=0x07
+DataType=0x0003
+AccessType=ro
+PDOMapping=1
+LowLimit=0x8000
+HighLimit=0x7FFF
+
+[2021sub2]
+ParameterName=LCP2
+ObjectType=0x07
+DataType=0x0003
+AccessType=ro
+PDOMapping=1
+LowLimit=0x8000
+HighLimit=0x7FFF
+
+[2021sub3]
+ParameterName=LCP3
+ObjectType=0x07
+DataType=0x0003
+AccessType=ro
+PDOMapping=1
+LowLimit=0x8000
+HighLimit=0x7FFF
+
+[2021sub4]
+ParameterName=Status
+ObjectType=0x07
+DataType=0x0005
+AccessType=ro
+PDOMapping=1
+LowLimit=0x00
+HighLimit=0xFF
+
+[2021sub5]
+ParameterName=Width LCP1
+ObjectType=0x07
+DataType=0x0003
+AccessType=ro
+PDOMapping=1
+LowLimit=0x8000
+HighLimit=0x7FFF
+
+[2021sub6]
+ParameterName=Width LCP2
+ObjectType=0x07
+DataType=0x0003
+AccessType=ro
+PDOMapping=1
+LowLimit=0x8000
+HighLimit=0x7FFF
+
+[2021sub7]
+ParameterName=Width LCP3
+ObjectType=0x07
+DataType=0x0003
+AccessType=ro
+PDOMapping=1
+LowLimit=0x8000
+HighLimit=0x7FFF
+
+[2021sub8]
+ParameterName=Code
+ObjectType=0x07
+DataType=0x0005
+AccessType=ro
+PDOMapping=1
+LowLimit=0x0
+HighLimit=0xFF
+
+[2021sub9]
+ParameterName=Extended Code
+ObjectType=0x07
+DataType=0x0007
+AccessType=ro
+PDOMapping=0
+LowLimit=0x0
+HighLimit=0xFFFFFFFF
+

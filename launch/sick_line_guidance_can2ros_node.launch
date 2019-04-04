@@ -1,0 +1,8 @@
+<launch>
+
+  <!-- sick_line_guidance: run can2ros_node support tool, converts can messages to ros messages -->
+  <node name="sick_line_guidance_can2ros_node" pkg="sick_line_guidance" type="sick_line_guidance_can2ros_node" />
+  <param name="can_device" type="str" value="can0" />    <!-- name of can net device (socketcan interface) -->
+  <param name="ros_topic" type="str" value="can0" />     <!-- topic for ros messages (output), message type can_msgs::Frame -->
+
+</launch>

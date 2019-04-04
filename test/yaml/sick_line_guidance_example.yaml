@@ -1,0 +1,30 @@
+bus:
+  device: can0
+  driver_plugin: can::SocketCANInterface
+  master_allocator: canopen::SimpleMaster::Allocator
+sync:
+  interval_ms: 10
+  overflow: 0
+# heartbeat: # simple heartbeat producer (optional, not supported by OLS or MLS, do not enable heartbeats, do not configure heartbeat rate or message)
+#   rate: 100 # heartbeat rate (milliseconds)
+#   msg: "77f#05" # message to send, cansend format: heartbeat of node 127 with status 5=Started
+nodes:
+  node1:
+    id: 0x03 # CAN-Node-ID of can device, default: Node-ID 10=0x0A for OLS10 and MLS (CiA401_IO_Node3: 0x03, CiA402_Stepper_Node8: 0x08)
+    eds_pkg: sick_line_guidance # package name for relative path
+    eds_file: CiA401_IO_Node3.eds # path to EDS/DCF file
+    publish: ["1001","1018sub1","1018sub4","6000sub1!","6000sub2!","6000sub3!","6000sub4!","6401sub1!","6401sub2!","6401sub3!","6401sub4!","6401sub5!","6401sub6!"]
+    # Common objects (CiA401_IO_Node3.eds, CiA402_Stepper_node8.eds, SICK_OLS20.eds, SICK-MLS-MLS.eds): 1001 = ErrorRegister, 1018sub1 = VendorID, 1018sub4 = SerialNumber
+    # objects SICK_OLS20.eds: 1001 = ErrorRegister, 1018sub1 = VendorID, 1018sub4 = SerialNumber, 0x2018 = DeviceStatus(0=OK), 0x2021sub1 bis 0x2021sub9 = measurementdata
+    # TPDOs SICK_OLS20.eds: 0x2021sub1 bis 0x2021sub8
+    # SICK-MLS.eds:  0x2021sub1 bis 0x2021sub4 und 0x2022 = measurementdata
+    # CiA401_IO_Node3.eds: TPDO mapped: 6000sub1 bis 6000sub8 (jeweils 1 byte), 6401sub1 bis 6401subC (jeweils 2 byte)
+    # Note: publish with "!" (f.e. publish: ["1001!"]) means reread from object directory
+    # (not cached, i.e. query by SDO, if no actual PDO is transmitted),
+    #  otherwise cached (use last received SDO or PDO).
+    
+    # sick_line_guidance configuration of this node:
+    sick_device_family: "CIA401"           # can devices of OLS or MLS family currently supported (or CIA401 for testing)
+    sick_topic: "ols"                      # OLS_Measurement messages are published in topic "/ols"
+    sick_frame_id: "ols_measurement_frame" # OLS_Measurement messages are published frame_id "ols_measurement_frame"
+

@@ -1,0 +1,18 @@
+<launch>
+
+  <!-- sick_line_guidance: run sick_canopen_simu_node -->
+  <arg name="device"/>                                                  <!-- can device, either "OLS" or "MLS" -->
+  <node name="sick_canopen_simu_node" pkg="sick_line_guidance" type="sick_canopen_simu_node" />
+  <param name="sick_canopen_simu_cfg_file" type="str" value="$(find sick_line_guidance)/sick_canopen_simu_cfg.xml" />  <!-- configuration file and testcases for OLS and MLS simulation --> 
+  <param name="can_node_id" type="int" value="10" />                    <!-- can node id of OLS/MLS simulator -->
+  <param name="sick_device_family" type="str" value="$(arg device)" />  <!-- simulation of either "OLS" or "MLS" device --> 
+  <param name="can_subscribe_topic" type="str" value="can0" />          <!-- topic for ros can messages (input), message type can_msgs::Frame --> 
+  <param name="mls_subscribe_topic" type="str" value="mls" />           <!-- topic for ros measurement messages (input), message type MLS_Measurement -->
+  <param name="ols_subscribe_topic" type="str" value="ols" />           <!-- topic for ros measurement messages (input), message type OLS_Measurement -->
+  <param name="publish_topic" type="str" value="ros2can0" />            <!-- topic for ros messages (output), message type can_msgs::Frame --> 
+  <param name="pdo_rate" type="double" value="50" />                    <!-- rate of PDOs: 50 PDOs simulated per second, i.e. 20 ms between two PDOs --> 
+  <param name="pdo_repeat_cnt" type="int" value="5" />                  <!-- each sensor state spefied in sick_canopen_simu_cfg.xml is repeated 5 times before switching to the next state --> 
+  <param name="can_message_queue_size" type="int" value="16" />         <!-- buffer size for can messages -->
+  <param name="sensor_state_queue_size" type="int" value="2" />         <!-- buffer size for simulated sensor states (OLS: 2 TPDOs) -->
+
+</launch>

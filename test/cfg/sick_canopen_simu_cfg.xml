@@ -1,0 +1,91 @@
+<?xml version="1.0" ?>
+<sick_canopen_simu>
+  <SDO_config>  
+    <!-- Lookup table for SDO response from SDO get request (client->server: upload request -> upload response) -->
+    <sdo request="0x4001100000000000" response="0x4F01100000000000" /> <!-- 1001:     error register (all can devices) -->
+    <sdo request="0x4001200500000000" response="0x4F01200500000000" /> <!-- 2001sub5: OLS sensor flipped -->
+    <sdo request="0x4002200100000000" response="0x4302200100000000" /> <!-- 2002sub1: OLS Typ. Width -->
+    <sdo request="0x4002200200000000" response="0x4302200200000000" /> <!-- 2002sub2: OLS Min. Width -->
+    <sdo request="0x4002200300000000" response="0x4302200300000000" /> <!-- 2002sub3: OLS Max. Width -->
+    <sdo request="0x4018100100000000" response="0x4318100156000001" /> <!-- 1018sub1: Vendor Id (OLS and MLS) -->
+    <sdo request="0x4018100400000000" response="0x4318100411AE2201" /> <!-- 1018sub4: Serial number (OLS and MLS) -->
+    <sdo request="0x4018200000000000" response="0x4F18200000000000" /> <!-- 2018:     OLS dev_status -->
+    <sdo request="0x4021200100000000" response="0x4B21200100000000" /> <!-- 2021sub1: LCP1 (OLS and MLS) -->
+    <sdo request="0x4021200200000000" response="0x4B21200200000000" /> <!-- 2021sub2: LCP2 (OLS and MLS) -->
+    <sdo request="0x4021200300000000" response="0x4B21200300000000" /> <!-- 2021sub3: LCP3 (OLS and MLS) -->
+    <sdo request="0x4021200400000000" response="0x4F21200400000000" /> <!-- 2021sub4: OLS: State, MLS: #LCP and marker -->
+    <sdo request="0x4021200500000000" response="0x4B21200500000000" /> <!-- 2021sub5: OLS Width LCP1 -->
+    <sdo request="0x4021200600000000" response="0x4B21200600000000" /> <!-- 2021sub6: OLS Width LCP2 -->
+    <sdo request="0x4021200700000000" response="0x4B21200700000000" /> <!-- 2021sub7: OLS Width LCP3 -->
+    <sdo request="0x4021200800000000" response="0x4F21200800000000" /> <!-- 2021sub8: OLS Barcode (UINT8) -->
+    <sdo request="0x4021200900000000" response="0x4321200900000000" /> <!-- 2021sub9: OLS Extended Barcode (UINT32) -->
+    <sdo request="0x4022200000000000" response="0x4F22200000000000" /> <!-- 2022:     MLS status -->
+    <sdo request="0x4025200000000000" response="0x4F25200000000000" /> <!-- 2025:     MLS Min.Level -->
+    <sdo request="0x4026200000000000" response="0x4F26200000000000" /> <!-- 2026:     MLS Offset -->
+    <sdo request="0x4027200000000000" response="0x4F27200000000000" /> <!-- 2027:     MLS sensorFlipped -->
+    <sdo request="0x4028200100000000" response="0x4F28200100000000" /> <!-- 2028sub1: MLS UseMarkers -->
+    <sdo request="0x4028200200000000" response="0x4F28200200000000" /> <!-- 2028sub2: MLS MarkerStyle -->
+    <sdo request="0x4028200300000000" response="0x4F28200300000000" /> <!-- 2028sub3: MLS FailSafeMode -->
+    <sdo request="0x4029200000000000" response="0x4F29200000000000" /> <!-- 2029:     MLS LockTeach -->
+    <!-- Lookup table for SDO response from SDO set request (dcf overlays, client->server: download request -> download response), -->
+    <!-- f.e. SDO request = 0x23022003CDCC4C3D = 0x2302200300000000 + {4 byte data}: SDO response = 0x6002200300000000 -->
+    <sdo request="0x2302200100000000" response="0x6002200100000000" /> <!-- 2002sub1: OLS Typ. Width -->
+    <sdo request="0x2302200200000000" response="0x6002200200000000" /> <!-- 2002sub2: OLS Min. Width -->
+    <sdo request="0x2302200300000000" response="0x6002200300000000" /> <!-- 2002sub3: OLS Max. Width -->
+    <sdo request="0x2B17100000000000" response="0x6017100000000000" /> <!-- 1017:     OLS Producer Heartbeat Time -->
+    <sdo request="0x2B25200000000000" response="0x6025200000000000" /> <!-- 2025:     MLS Min.Level -->
+    <sdo request="0x2B26200000000000" response="0x6026200000000000" /> <!-- 2026:     MLS Offset -->
+    <sdo request="0x2F01200500000000" response="0x6001200501000000" /> <!-- 2001sub5: OLS sensor flipped -->
+    <sdo request="0x2F27200000000000" response="0x6027200000000000" /> <!-- 2027:     MLS sensorFlipped -->
+    <sdo request="0x2F28200100000000" response="0x6028200100000000" /> <!-- 2028sub1: MLS UseMarkers -->
+    <sdo request="0x2F28200200000000" response="0x6028200200000000" /> <!-- 2028sub2: MLS MarkerStyle -->
+    <sdo request="0x2F28200300000000" response="0x6028200300000000" /> <!-- 2028sub3: MLS FailSafeMode -->
+    <sdo request="0x2F29200000000000" response="0x6029200000000000" /> <!-- 2029:     MLS LockTeach -->  
+  </SDO_config>
+  <OLS>
+    <PDO_config>
+      <!-- List of PDOs to simulate OLS device -->
+      <!-- Status byte OLS (0x2021sub4 in object dictionary, Bit7=MSBit to Bit0=LSBit): -->
+      <!--   Bit7: CodeValid, Bit6: CodeFlipped, Bit5: x, Bit4: DeviceStatus, Bit3: x, Bit2: #LCPBit2, Bit1: #LCPBit1, Bit0: #LCPBit0 -->
+      <!-- Device status byte OLS (0x2018 in object dictionary):  -->
+      <!--   Bit0=0: Device okay,  Bit0=1: Device error -->
+      <pdo lcp1="0.000"  lcp2="0.000"  lcp3="0.000"  width1="0.000" width2="0.000" width3="0.000" status="0x00" barcode="0x00"       devstatus="0x00" error="0x00" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.000"  lcp2="0.002"  lcp3="0.000"  width1="0.000" width2="0.012" width3="0.000" status="0x02" barcode="0x00"       devstatus="0x00" error="0x00" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.000"  lcp2="0.002"  lcp3="0.003"  width1="0.000" width2="0.012" width3="0.013" status="0x03" barcode="0x00"       devstatus="0x00" error="0x00" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.001"  lcp2="0.002"  lcp3="0.000"  width1="0.011" width2="0.012" width3="0.000" status="0x06" barcode="0x00"       devstatus="0x00" error="0x00" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.001"  lcp2="0.002"  lcp3="0.003"  width1="0.011" width2="0.012" width3="0.013" status="0x07" barcode="0x00"       devstatus="0x00" error="0x00" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.001"  lcp2="0.002"  lcp3="0.003"  width1="0.011" width2="0.012" width3="0.013" status="0x87" barcode="0x78"       devstatus="0x00" error="0x00" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="-0.001" lcp2="-0.002" lcp3="-0.003" width1="0.021" width2="0.022" width3="0.023" status="0x87" barcode="0xEF"       devstatus="0x00" error="0x00" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.010"  lcp2="0.020"  lcp3="0.030"  width1="0.031" width2="0.032" width3="0.033" status="0x87" barcode="0x100"      devstatus="0x00" error="0x00" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.010"  lcp2="-0.020" lcp3="0.030"  width1="0.031" width2="0.032" width3="0.033" status="0x87" barcode="0x12345678" devstatus="0x00" error="0x00" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.010"  lcp2="-0.020" lcp3="-0.030" width1="0.031" width2="0.032" width3="0.033" status="0xC7" barcode="0x12345678" devstatus="0x00" error="0x00" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.000"  lcp2="0.000"  lcp3="0.000"  width1="0.000" width2="0.000" width3="0.000" status="0xD7" barcode="0xFFFFFFFF" devstatus="0x01" error="0x00" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.000"  lcp2="0.000"  lcp3="0.000"  width1="0.000" width2="0.000" width3="0.000" status="0xD7" barcode="0xFFFFFFFF" devstatus="0xAB" error="0x00" frame_id="ols_simulation_frame"/>
+    </PDO_config>
+  </OLS>
+  <MLS>
+    <PDO_config>
+      <!-- List of PDOs to simulate MLS device -->
+      <!-- status byte MLS (2022 in object dictionary, Bit7=MSBit to Bit0=LSBit):  -->
+      <!--   Bit7: 0, Bit6: ReadingCode, Bit5: Polarity, Bit4: SensorFlipped, Bit3: LineLevBit2, Bit2: LineLevBit1, Bit1: LineLevBit0, Bit0: Linegood(1:LineGood,0:NotGood) -->
+      <!-- lcp byte MLS (0x2021sub4 in object dictionary, Bit7=MSBit to Bit0=LSBit): -->
+      <!--   Bit7: MarkerBit4, Bit6: MarkerBit3, Bit5: MarkerBit2, Bit4: MarkerBit1, Bit3: MarkerBit0, Bit2: #LCPBit2, Bit1: #LCPBit1, Bit0: #LCPBit0 -->
+      <pdo lcp1="0.000"  lcp2="0.000"  lcp3="0.000"  status="0x00" lcp="0x00" error="0x00" frame_id="mls_simulation_frame"/>
+      <pdo lcp1="0.000"  lcp2="0.002"  lcp3="0.000"  status="0x01" lcp="0x02" error="0x00" frame_id="mls_simulation_frame"/>
+      <pdo lcp1="0.000"  lcp2="0.002"  lcp3="0.003"  status="0x01" lcp="0x03" error="0x00" frame_id="mls_simulation_frame"/>
+      <pdo lcp1="0.001"  lcp2="0.002"  lcp3="0.000"  status="0x01" lcp="0x06" error="0x00" frame_id="mls_simulation_frame"/>
+      <pdo lcp1="0.001"  lcp2="0.002"  lcp3="0.003"  status="0x01" lcp="0x07" error="0x00" frame_id="mls_simulation_frame"/>
+      <pdo lcp1="-0.010" lcp2="0.020"  lcp3="0.030"  status="0x01" lcp="0x07" error="0x00" frame_id="mls_simulation_frame"/>
+      <pdo lcp1="0.010"  lcp2="-0.020" lcp3="0.030"  status="0x01" lcp="0x07" error="0x00" frame_id="mls_simulation_frame"/>
+      <pdo lcp1="0.010"  lcp2="0.020"  lcp3="-0.030" status="0x01" lcp="0x07" error="0x00" frame_id="mls_simulation_frame"/>
+      <pdo lcp1="-0.010" lcp2="-0.020" lcp3="-0.030" status="0x01" lcp="0x07" error="0x00" frame_id="mls_simulation_frame"/>
+      <pdo lcp1="-0.005" lcp2="-0.006" lcp3="-0.007" status="0x41" lcp="0x57" error="0x00" frame_id="mls_simulation_frame"/>
+      <pdo lcp1="-0.005" lcp2="-0.006" lcp3="-0.007" status="0x41" lcp="0xAF" error="0x00" frame_id="mls_simulation_frame"/>
+      <pdo lcp1="-0.005" lcp2="-0.006" lcp3="-0.007" status="0x41" lcp="0xFF" error="0x00" frame_id="mls_simulation_frame"/>
+      <pdo lcp1="-0.005" lcp2="-0.006" lcp3="-0.007" status="0x41" lcp="0xFF" error="0x00" frame_id="mls_simulation_frame"/>
+      <pdo lcp1="-0.005" lcp2="-0.006" lcp3="-0.007" status="0x61" lcp="0xFF" error="0x00" frame_id="mls_simulation_frame"/>
+      <pdo lcp1="-0.005" lcp2="-0.006" lcp3="-0.007" status="0x7F" lcp="0xFF" error="0x00" frame_id="mls_simulation_frame"/>
+    </PDO_config>
+  </MLS>
+</sick_canopen_simu>
+

@@ -108,7 +108,7 @@ namespace sick_line_guidance
      */
     void stop()
     {
-      m_socketcan_running = true;
+      m_socketcan_running = false;
       if(m_socketcan_thread)
       {
         m_socketcan_interface->shutdown();

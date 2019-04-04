@@ -4,17 +4,21 @@ SICK Line Guidance ROS Support
 
 # Introduction
 
-The aim of this project is to provide an ROS connection for lane guidance sensors of the OLS and MLS family.
-Currently under development.
+The aim of this project is to provide an ROS connection for lane guidance sensors of the OLS20 and MLS family.
+The driver is brand new and preliminary in relation to the OLS20.
+
+The OLS20 is a new product from SICK and is currently in final qualification.
+
+Users should regularly inform themselves about updates to this driver (best subscribe under "Watch").
 
 # Supported Hardware
 
-SICK optical and magnetical line sensors OLS and MLS.
+SICK optical and magnetical line sensors OLS20 and MLS.
 
 | Product Family  | Product Information and Manuals |
 | --- | --- |
-| OLS | https://www.sick.com/ols |
-| MLS | https://www.sick.com/mls |
+| OLS20 | https://www.sick.com/ols (OLS20 not yet listed)|
+| MLS   | https://www.sick.com/mls |
 
 # Installation and setup
 

@@ -10,7 +10,8 @@ rm -f build/catkin_make_install.log
 catkin_make install 2>&1 | tee -a build/catkin_make_install.log
 source ./install/setup.bash
 
-# lint
+# lint, install by running
+# sudo apt-get install python-catkin-lint
 catkin_lint -W1 src/sick_line_guidance
 
 # print warnings and errors

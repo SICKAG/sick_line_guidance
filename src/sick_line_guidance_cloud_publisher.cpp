@@ -147,6 +147,7 @@ int main(int argc, char** argv)
   
   ros::spin();
   
+  std::cout << "sick_line_guidance_cloud_publisher finished." << std::endl;
   ROS_INFO_STREAM("sick_line_guidance_cloud_publisher finished.");
   return 0;
 }

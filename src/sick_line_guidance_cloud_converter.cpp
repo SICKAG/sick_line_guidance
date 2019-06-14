@@ -152,8 +152,8 @@ sensor_msgs::PointCloud2 sick_line_guidance::CloudConverter::convert(const sick_
   int numMeasuredLines = linenumber(measurement.status);
   if(!sensorOkay || numMeasuredLines < 1) // no lines detected
     return cloud; // return empty PointCloud2
-  int numChannels = 9; // "x", "y", "z", "linewidth", "lineidx", "barcode", "status", "dev_status", "error"
-  std::string channelId[] = { "x", "y", "z", "linewidth", "lineidx", "barcode", "status", "dev_status", "error" };
+  int numChannels = 12; // "x", "y", "z", "linewidth", "lineidx", "barcode", "status", "dev_status", "error", "barcode_center", "line_quality", "line_intensity"
+  std::string channelId[] = { "x", "y", "z", "linewidth", "lineidx", "barcode", "status", "dev_status", "error", "barcode_center", "line_quality", "line_intensity" };
   cloud.height = 1;
   cloud.width = numMeasuredLines; // normally we have 3 positions (3 lines, one position for each line)
   cloud.is_bigendian = false;
@@ -167,14 +167,15 @@ sensor_msgs::PointCloud2 sick_line_guidance::CloudConverter::convert(const sick_
     cloud.fields[i].offset = i * sizeof(float);
     cloud.fields[i].count = 1;
   }
-  for (int i = 0; i < 4; i++)
+  for (int i = 0; i < numChannels; i++)
   {
-    cloud.fields[i].datatype = sensor_msgs::PointField::FLOAT32; // "x", "y", "z", "linewidth"
+    cloud.fields[i].datatype = sensor_msgs::PointField::UINT32; // default: datatype UINT32
   }
-  for (int i = 4; i < numChannels; i++)
-  {
-    cloud.fields[i].datatype = sensor_msgs::PointField::UINT32; // "lineidx", "barcode", "status", "dev_status", "error"
-  }
+  cloud.fields[0].datatype = sensor_msgs::PointField::FLOAT32; // "x"
+  cloud.fields[1].datatype = sensor_msgs::PointField::FLOAT32; // "y"
+  cloud.fields[2].datatype = sensor_msgs::PointField::FLOAT32; // "z"
+  cloud.fields[3].datatype = sensor_msgs::PointField::FLOAT32; // "linewidth"
+  cloud.fields[9].datatype = sensor_msgs::PointField::FLOAT32; // "barcode_center"
   // get barcode: barcode valid, if bit 7 of measurement.status is set
   uint32_t barcode = 0;
   if((measurement.status & 0x80) != 0)
@@ -198,15 +199,18 @@ sensor_msgs::PointCloud2 sick_line_guidance::CloudConverter::convert(const sick_
   {
     if(lines_valid[meaIdx])
     {
-      pfdata[cloudIdx++] = 0;                             // "x" := 0
-      pfdata[cloudIdx++] = measurement.position[meaIdx]; // "y" := measurement.position[i]
-      pfdata[cloudIdx++] = 0;                             // "z" := 0
-      pfdata[cloudIdx++] = measurement.width[meaIdx];     // "linewidth" := measurement.width[i]
-      pidata[cloudIdx++] = meaIdx + 1;                    // "lineidx": 1:=LCP1, 2:=LCP2, 3:=LCP3
-      pidata[cloudIdx++] = barcode;                       // "barcode"
-      pidata[cloudIdx++] = measurement.status;            // "status"
-      pidata[cloudIdx++] = measurement.dev_status;        // "dev_status"
-      pidata[cloudIdx++] = measurement.error;             // "error"
+      pfdata[cloudIdx++] = 0;                                       // "x" := 0
+      pfdata[cloudIdx++] = measurement.position[meaIdx];            // "y" := measurement.position[i]
+      pfdata[cloudIdx++] = 0;                                       // "z" := 0
+      pfdata[cloudIdx++] = measurement.width[meaIdx];               // "linewidth" := measurement.width[i]
+      pidata[cloudIdx++] = meaIdx + 1;                              // "lineidx": 1:=LCP1, 2:=LCP2, 3:=LCP3
+      pidata[cloudIdx++] = barcode;                                 // "barcode"
+      pidata[cloudIdx++] = measurement.status;                      // "status"
+      pidata[cloudIdx++] = measurement.dev_status;                  // "dev_status"
+      pidata[cloudIdx++] = measurement.error;                       // "error"
+      pfdata[cloudIdx++] = measurement.barcode_center_point;        // "barcode_center" (OLS20 only, OLS10: always 0)
+      pidata[cloudIdx++] = measurement.quality_of_lines;            // "line_quality"   (OLS20 only, OLS10: always 0)
+      pidata[cloudIdx++] = measurement.intensity_of_lines[meaIdx];  // "line_intensity" (OLS20 only, OLS10: always 0)
     }
   }
   ROS_DEBUG("CloudConverter::convert(OLS_Measurement): sensorOkay=%d, numMeasuredLines=%d, numChannels=%d, numBytes=%d",

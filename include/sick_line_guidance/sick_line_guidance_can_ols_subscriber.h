@@ -61,7 +61,7 @@ namespace sick_line_guidance
 {
 
   /*
-   * class CanOlsSubscriber implements the ros subscriber to canopen ols messages.
+   * class CanOlsSubscriber implements the base ros subscriber to canopen ols messages.
    */
   class CanOlsSubscriber : public CanSubscriber
   {
@@ -156,8 +156,52 @@ namespace sick_line_guidance
     // virtual void cancallbackError(const boost::shared_ptr<std_msgs::UInt8 const>& msg);
     // virtual void cancallbackDevState(const boost::shared_ptr<std_msgs::UInt8 const>& msg);
     // virtual void cancallbackExtCode(const boost::shared_ptr<std_msgs::UInt32 const>& msg);
+    
+    bool m_bOLS20queries; // OLS20 only: query objects 2021subA (barcode center point, INT16), 2021subB (quality of lines, UINT8) and 2023sub1 to 2023sub3 (intensity line 1 - 3, UINT8)
   
   }; // class CanOlsSubscriber
-
+  
+  /*
+   * class CanOls10Subscriber derives from CanOlsSubscriber to implements OLS10 specific handling of the ros canopen messages.
+   */
+  class CanOls10Subscriber : public CanOlsSubscriber
+  {
+  public:
+    
+    /*
+     * Constructor.
+     * @param[in] nh ros::NodeHandle
+     * @param[in] can_nodeid can id for canopen_chain_node, f.e. "node1"
+     * @param[in] ros_topic topic for ros messages, f.e. "mls" or "ols"
+     * @param[in] ros_frameid frameid for ros messages, f.e. "mls_measurement_frame" or "ols_measurement_frame"
+     * @param[in] initial_sensor_state initial sensor state (f.e. 0x07 for 3 detected lines, or (1 << 4) to indicate sensor error)
+     * @param[in] subscribe_queue_size buffer size for ros messages
+     */
+    CanOls10Subscriber(ros::NodeHandle & nh, const std::string & can_nodeid, const std::string & ros_topic,
+                     const std::string & ros_frameid, int initial_sensor_state = 0, int subscribe_queue_size = 1);
+  
+  }; // class CanOls10Subscriber
+  
+  /*
+   * class CanOls20Subscriber derives from CanOlsSubscriber to implements OLS20 specific handling of the ros canopen messages.
+   */
+  class CanOls20Subscriber : public CanOlsSubscriber
+  {
+  public:
+    
+    /*
+     * Constructor.
+     * @param[in] nh ros::NodeHandle
+     * @param[in] can_nodeid can id for canopen_chain_node, f.e. "node1"
+     * @param[in] ros_topic topic for ros messages, f.e. "mls" or "ols"
+     * @param[in] ros_frameid frameid for ros messages, f.e. "mls_measurement_frame" or "ols_measurement_frame"
+     * @param[in] initial_sensor_state initial sensor state (f.e. 0x07 for 3 detected lines, or (1 << 4) to indicate sensor error)
+     * @param[in] subscribe_queue_size buffer size for ros messages
+     */
+    CanOls20Subscriber(ros::NodeHandle & nh, const std::string & can_nodeid, const std::string & ros_topic,
+                       const std::string & ros_frameid, int initial_sensor_state = 0, int subscribe_queue_size = 1);
+    
+  }; // class CanOls20Subscriber
+  
 } // namespace sick_line_guidance
 #endif // __SICK_LINE_GUIDANCE_CAN_OLS_SUBSCRIBER_H_INCLUDED

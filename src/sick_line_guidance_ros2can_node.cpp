@@ -197,6 +197,7 @@ int main(int argc, char** argv)
   // Run ros event loop
   ros::spin();
   
+  std::cout << "sick_line_guidance_ros2can_node: exiting..." << std::endl;
   ROS_INFO_STREAM("sick_line_guidance_ros2can_node: exiting...");
   socketcan_sender.stop();
   p_socketcan_interface = 0;

@@ -93,7 +93,12 @@ std::string sick_line_guidance::MsgUtil::toInfo(const sick_line_guidance::OLS_Me
        << "],status=" << sick_line_guidance::MsgUtil::toHexString(measurement_msg.status)
        << ",devstatus=" << sick_line_guidance::MsgUtil::toHexString(measurement_msg.dev_status)
        << ",error=" << sick_line_guidance::MsgUtil::toHexString(measurement_msg.error)
-       << ",barcode=0x" << std::uppercase << std::hex << std::setfill('0') << std::setw(2) << barcode;
+       << ",barcode=0x" << std::uppercase << std::hex << std::setfill('0') << std::setw(2) << barcode
+       << ",barcodecenter=" << std::fixed << std::setprecision(3) << measurement_msg.barcode_center_point
+       << ",linequality=" << sick_line_guidance::MsgUtil::toHexString(measurement_msg.quality_of_lines)
+       << ",lineintensity=[" << sick_line_guidance::MsgUtil::toHexString(measurement_msg.intensity_of_lines[0])
+       << "," << sick_line_guidance::MsgUtil::toHexString(measurement_msg.intensity_of_lines[1])
+       << "," << sick_line_guidance::MsgUtil::toHexString(measurement_msg.intensity_of_lines[2]) << "]";
   return info.str();
 }
 
@@ -126,6 +131,10 @@ void sick_line_guidance::MsgUtil::zero(sick_line_guidance::OLS_Measurement & mea
   measurement_msg.extended_code = 0;
   measurement_msg.dev_status = 0;
   measurement_msg.error = 0;
+  measurement_msg.barcode_center_point = 0;
+  measurement_msg.quality_of_lines = 0;
+  measurement_msg.intensity_of_lines = { 0, 0, 0 };
+  
 }
 
 /*
@@ -166,12 +175,17 @@ sick_line_guidance::MLS_Measurement sick_line_guidance::MsgUtil::convertMLSMessa
  * @param[in] barcode Barcode (> 255: extended barcode), , object 0x2021sub8 and 0x2021sub9 in object dictionary
  * @param[in] dev_status Device status, object 0x2018 in object dictionary
  * @param[in] error error register, object 0x1001 in object dictionary
+ * @param[in] barcodecenter barcode_center_point,  OLS20 only (0x2021subA), OLS10: always 0
+ * @param[in] linequality quality_of_lines,         OLS20 only (0x2021subB), OLS10: always 0
+ * @param[in] lineintensity1 intensity_of_lines[0], OLS20 only (0x2023sub1), OLS10: always 0
+ * @param[in] lineintensity2 intensity_of_lines[1], OLS20 only (0x2023sub2), OLS10: always 0
+ * @param[in] lineintensity3 intensity_of_lines[2], OLS20 only (0x2023sub3), OLS10: always 0
  * @param[in] msg_frame_id frame id of OLS_Measurement message
  *
  * @return parameter converted to OLS_Measurement
  */
-sick_line_guidance::OLS_Measurement sick_line_guidance::MsgUtil::convertOLSMessage(float lcp1, float lcp2, float lcp3, float width1, float width2, float width3,
-  uint8_t status, uint32_t barcode, uint8_t dev_status, uint8_t error, const std::string & msg_frame_id)
+sick_line_guidance::OLS_Measurement sick_line_guidance::MsgUtil::convertOLSMessage(float lcp1, float lcp2, float lcp3, float width1, float width2, float width3, uint8_t status,
+  uint32_t barcode, uint8_t dev_status, uint8_t error, float barcodecenter, uint8_t linequality, uint8_t lineintensity1, uint8_t lineintensity2, uint8_t lineintensity3, const std::string & msg_frame_id)
 {
   sick_line_guidance::OLS_Measurement ols_message;
   ols_message.header.stamp = ros::Time::now();
@@ -191,6 +205,9 @@ sick_line_guidance::OLS_Measurement sick_line_guidance::MsgUtil::convertOLSMessa
   }
   ols_message.dev_status = dev_status;
   ols_message.error = error;
+  ols_message.barcode_center_point = barcodecenter;
+  ols_message.quality_of_lines = linequality;
+  ols_message.intensity_of_lines = { lineintensity1, lineintensity2, lineintensity3 };
   return ols_message;
 }
 

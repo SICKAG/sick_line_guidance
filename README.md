@@ -4,20 +4,18 @@ SICK Line Guidance ROS Support
 
 # Introduction
 
-The aim of this project is to provide an ROS connection for lane guidance sensors of the OLS20 and MLS family.
-The driver is brand new and preliminary in relation to the OLS20.
-
-The OLS20 is a new product from SICK and is currently in final qualification.
+The aim of this project is to provide an ROS connection for lane guidance sensors of the OLS10, OLS20 and MLS family.
 
 Users should regularly inform themselves about updates to this driver (best subscribe under "Watch").
 
 # Supported Hardware
 
-SICK optical and magnetical line sensors OLS20 and MLS.
+SICK optical and magnetical line sensors OLS10, OLS20 and MLS.
 
 | Product Family  | Product Information and Manuals |
 | --- | --- |
-| OLS20 | https://www.sick.com/ols (OLS20 not yet listed)|
+| OLS10 | https://www.sick.com/ols10 |
+| OLS20 | https://www.sick.com/ols20 |
 | MLS   | https://www.sick.com/mls |
 
 # Installation and setup
@@ -71,13 +69,14 @@ ip -details link show can0
 ```
 
 The can node id of the OLS or MLS device is configured in a yaml-file:
+- catkin_ws/src/sick_line_guidance/ols/sick_line_guidance_ols10.yaml for OLS10 devices
 - catkin_ws/src/sick_line_guidance/ols/sick_line_guidance_ols20.yaml for OLS20 devices
 - catkin_ws/src/sick_line_guidance/mls/sick_line_guidance_mls.yaml for MLS devices
 
 The default can node id is 0x0A. To use a different can node id, set entry "id: 0x0A" to the appropriate value in the yaml-file:
 ```bash
   node1:
-    id: 0x0A # CAN-Node-ID of can device, default: Node-ID 10=0x0A for OLS10 and MLS
+    id: 0x0A # CAN-Node-ID of can device, default: Node-ID 10=0x0A for OLS and MLS
 ```
 Install the new configuration with 
 ```bash
@@ -97,6 +96,7 @@ To start the driver for MLS or OLS, the ros package sick_line_guidance and its l
 ```bash
 cd ~/catkin_ws # change working directory to the project path
 source ./install/setup.bash # set environment
+roslaunch -v --screen sick_line_guidance sick_line_guidance.launch yaml:=sick_line_guidance_ols10.yaml # start OLS10 driver
 roslaunch -v --screen sick_line_guidance sick_line_guidance.launch yaml:=sick_line_guidance_ols20.yaml # start OLS20 driver
 roslaunch -v --screen sick_line_guidance sick_line_guidance.launch yaml:=sick_line_guidance_mls.yaml   # start MLS driver
 ```
@@ -201,6 +201,7 @@ For test purposes or in case of hardware problems, cansend can be used to send C
 
 ```bash
 cansend can0 000#820A # NMT message to can device 0x0A: 0x82, reset communication
+cansend can0 60A#4F01100000000000 # PDO request: read error register 1001
 ```
 
 ## Simulation and testing

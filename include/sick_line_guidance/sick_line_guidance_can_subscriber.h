@@ -67,6 +67,7 @@
 #include <std_msgs/UInt32.h>
 #include "sick_line_guidance/MLS_Measurement.h"
 #include "sick_line_guidance/OLS_Measurement.h"
+#include "sick_line_guidance/sick_line_guidance_msg_util.h"
 
 namespace sick_line_guidance
 {
@@ -120,9 +121,10 @@ namespace sick_line_guidance
        * @param[in] initial_sensor_state initial sensor state (f.e. 0x07 for 3 detected lines, or (1 << 4) to indicate sensor error)
        * @param[in] max_publish_rate max rate to publish OLS/MLS measurement messages (default: min. 1 ms between two measurement messages)
        * @param[in] max_query_rate max rate to query SDOs if required (default: min. 1 ms between sdo queries)
-       * @param[in] schedule_publish_delay  MLS and OLS measurement message are scheduled to be published 5 milliseconds after first PDO is received
+       * @param[in] schedule_publish_delay MLS and OLS measurement message are scheduled to be published 5 milliseconds after first PDO is received
+       * @param[in] max_publish_delay MLS and OLS measurement message are scheduled to be published max. 2*20 milliseconds after first PDO is received, even if a sdo request is pending (max. 2 * tpdo rate)
        */
-      MeasurementHandler(ros::NodeHandle & nh, const std::string & can_nodeid, int initial_sensor_state = 0, double max_publish_rate = 1000, double max_query_rate = 1000, double schedule_publish_delay = 0.005);
+      MeasurementHandler(ros::NodeHandle & nh, const std::string & can_nodeid, int initial_sensor_state = 0, double max_publish_rate = 1000, double max_query_rate = 1000, double schedule_publish_delay = 0.005, double max_publish_delay = 0.04);
     
       /*
        * Destructor.
@@ -140,50 +142,16 @@ namespace sick_line_guidance
       virtual void runMeasurementSDOqueryThread(void);
   
       /*
-       * @brief queries an object in the object dictionary by SDO and returns its value.
-       * @param[in] can_object_idx object index in object dictionary, f.e. "2018" (OLS device status) or "2021sub9" (OLS extended code)
-       * @param[out] can_object_value object value from SDO response
-       * @return true on success (can_object_value set to objects value), false otherwise (can_object_value not set)
-       */
-      bool querySDO(const std::string & can_object_idx, uint8_t & can_object_value);
-  
-      /*
-       * @brief queries an object in the object dictionary by SDO and returns its value.
-       * @param[in] can_object_idx object index in object dictionary, f.e. "2018" (OLS device status) or "2021sub9" (OLS extended code)
-       * @param[out] can_object_value object value from SDO response
-       * @return true on success (can_object_value set to objects value), false otherwise (can_object_value not set)
-       */
-      bool querySDO(const std::string & can_object_idx, uint32_t & can_object_value);
-  
-      /*
-       * @brief queries an object in the object dictionary by SDO and returns its value.
-       * @param[in] can_object_idx object index in object dictionary, f.e. "2018" (OLS device status) or "2021sub9" (OLS extended code)
-       * @param[out] can_object_value object value from SDO response
-       * @return true on success (can_object_value set to objects value), false otherwise (can_object_value not set)
-       */
-      bool querySDO(const std::string & can_object_idx, std::string & can_object_value);
-
-      /*
-       * @brief returns true, if publishing of a MLS measurement is scheduled and time has been reached for publishing the current MLS measurement.
-      */
-      bool isMLSMeasurementTriggered(void);
-
-      /*
-       * @brief returns true, if publishing of a OLS measurement is scheduled and time has been reached for publishing the current OLS measurement.
-       */
-      bool isOLSMeasurementTriggered(void);
-      
-      /*
        * @brief schedules the publishing of the current MLS measurement message.
        * @param[in] schedule if true, publishing is scheduled, otherwise a possibly pending schedule is removed.
        */
-      void schedulePublishMLSMeasurement(bool schedule);
+      virtual void schedulePublishMLSMeasurement(bool schedule);
 
       /*
        * @brief schedules the publishing of the current OLS measurement message.
       * @param[in] schedule if true, publishing is scheduled, otherwise a possibly pending schedule is removed.
        */
-      void schedulePublishOLSMeasurement(bool schedule);
+      virtual void schedulePublishOLSMeasurement(bool schedule);
       
       /*
        * MeasurementHandler member data.
@@ -199,16 +167,108 @@ namespace sick_line_guidance
       ros::Rate m_max_sdo_query_rate;                  // max. rate to query SDOs if required
       ros::Time m_publish_mls_measurement;             // time to publish next MLS measurement message
       ros::Time m_publish_ols_measurement;             // time to publish next OLS measurement message
+      ros::Time m_publish_measurement_latest;          // latest time to publish a measurement message (even if a sdo request is pending)
       boost::mutex m_publish_measurement_mutex;        // lock guard to schedule publishing measurements using m_publish_mls_measurement and m_publish_ols_measurement
       ros::Duration m_schedule_publish_delay;          // MLS and OLS measurement message are scheduled to be published 5 milliseconds after first PDO is received
+      ros::Duration m_max_publish_delay;               // MLS and OLS measurement message are scheduled to be published max. 2*20 milliseconds after first PDO is received, even if a sdo request is pending (max. 2 * tpdo rate)
       bool m_ols_query_extended_code;                  // true: query object 0x2021sub9 (extended code, UINT32) in object dictionary by SDO
-      bool m_ols_query_device_status;                  // true: query object 0x2018 (device status register, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
+      bool m_ols_query_device_status_u8;               // true: query object 0x2018 (device status register, OLS20: UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
+      bool m_ols_query_device_status_u16;              // true: query object 0x2018 (device status register, OLS10: UINT16) in object dictionary by SDO (query runs in m_measurement in a background thread)
       bool m_ols_query_error_register;                 // true: query object 0x1001 (error register, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
+      bool m_ols_query_barcode_center_point;           // true (OLS20 only): query object 2021subA (barcode center point, INT16)
+      bool m_ols_query_quality_of_lines;               // true (OLS20 only): query object 2021subB (quality of lines, UINT8)
+      bool m_ols_query_intensity_of_lines[3];          // true (OLS20 only): query object 2023sub1 to 2023sub3 (intensity lines 1 - 3, UINT8)
       boost::thread * m_measurement_publish_thread;    // background thread to publishes MLS/OLS measurement messages
       boost::thread * m_measurement_sdo_query_thread;  // background thread to query SDOs if required
       
     protected:
+  
+      /*
+       * @brief returns true, if publishing of a MLS measurement is scheduled and time has been reached for publishing the current MLS measurement.
+      */
+      virtual bool isMLSMeasurementTriggered(void);
+  
+      /*
+       * @brief returns true, if publishing of a OLS measurement is scheduled and time has been reached for publishing the current OLS measurement.
+       */
+      virtual bool isOLSMeasurementTriggered(void);
 
+      /*
+       * @brief returns true, if publishing of a measurement is scheduled and latest time for publishing has been reached.
+       */
+      virtual bool isLatestTimeForMeasurementPublishing(void);
+  
+      /*
+       * @brief returns true, if sdo query is pending, i.e. measurement is not yet completed (sdo request or sdo response still pending)
+       */
+      virtual bool isSDOQueryPending(void);
+  
+      /*
+       * @brief queries an object in the object dictionary by SDO and returns its value.
+       * @param[in] can_object_idx object index in object dictionary, f.e. "2018" (OLS device status) or "2021sub9" (OLS extended code)
+       * @param[out] can_object_value object value from SDO response
+       * @return true on success (can_object_value set to objects value), false otherwise (can_object_value not set)
+       */
+      virtual bool querySDO(const std::string & can_object_idx, uint8_t & can_object_value);
+  
+      /*
+       * @brief queries an object in the object dictionary by SDO and returns its value.
+       * @param[in] can_object_idx object index in object dictionary, f.e. "2018" (OLS device status) or "2021sub9" (OLS extended code)
+       * @param[out] can_object_value object value from SDO response
+       * @return true on success (can_object_value set to objects value), false otherwise (can_object_value not set)
+       */
+      virtual bool querySDO(const std::string & can_object_idx, uint16_t & can_object_value);
+  
+      /*
+       * @brief queries an object in the object dictionary by SDO and returns its value.
+       * @param[in] can_object_idx object index in object dictionary, f.e. "2018" (OLS device status) or "2021sub9" (OLS extended code)
+       * @param[out] can_object_value object value from SDO response
+       * @return true on success (can_object_value set to objects value), false otherwise (can_object_value not set)
+       */
+      virtual bool querySDO(const std::string & can_object_idx, int16_t & can_object_value);
+  
+      /*
+       * @brief queries an object in the object dictionary by SDO and returns its value.
+       * @param[in] can_object_idx object index in object dictionary, f.e. "2018" (OLS device status) or "2021sub9" (OLS extended code)
+       * @param[out] can_object_value object value from SDO response
+       * @return true on success (can_object_value set to objects value), false otherwise (can_object_value not set)
+       */
+      virtual bool querySDO(const std::string & can_object_idx, uint32_t & can_object_value);
+  
+      /*
+       * @brief queries an object in the object dictionary by SDO and returns its value.
+       * @param[in] can_object_idx object index in object dictionary, f.e. "2018" (OLS device status) or "2021sub9" (OLS extended code)
+       * @param[out] can_object_value object value from SDO response
+       * @return true on success (can_object_value set to objects value), false otherwise (can_object_value not set)
+       */
+      virtual bool querySDO(const std::string & can_object_idx, std::string & can_object_value);
+  
+      /*
+       * @brief queries an object value by SDO, if bQueryPending==true. After SDO query returned, output_value is set and bQueryPending cleared
+       * (assume bQueryPending==false after this function returned).
+       *
+       * @param[in+out] bQueryPending true: query object value by SDO, false: do nothing
+       * @param[in] object_index index in object dictionary, f.e. "2021sub9" for object 0x2021 subindex 9
+       * @param[out] output_value object value queried by SDO
+       * @param[in] norm_factor factor to convert object to output value, f.e. 0.001 to convert millimeter (object value) to meter (output value). Default: 1
+       *
+       * @return uint8_t value
+       */
+      template <class S, class T> void querySDOifPending(bool & bQueryPending, const std::string & object_index, T & output_value, T norm_factor)
+      {
+        if(bQueryPending)
+        {
+          S sdo_value;
+          if(querySDO(object_index, sdo_value) && bQueryPending)
+          {
+            ROS_INFO_STREAM("sick_line_guidance::CanSubscriber::MeasurementHandler: [" << object_index << "]=" << sick_line_guidance::MsgUtil::toHexString(sdo_value));
+            boost::lock_guard<boost::mutex> publish_lockguard(m_measurement_mutex);
+            output_value = (norm_factor * sdo_value);
+          }
+          bQueryPending = false;
+        }
+      }
+  
       /*
        * @brief converts a sdo response to uint8.
        * Note: nh.serviceClient<canopen_chain_node::GetObject> returns SDO responses as strings.
@@ -220,8 +280,8 @@ namespace sick_line_guidance
        * @param[out] value uint8 value converted from SDO response
        * @return true on success, false otherwise
        */
-      bool convertSDOresponse(const std::string & response, uint8_t & value);
-
+      virtual bool convertSDOresponse(const std::string & response, uint8_t & value);
+  
       /*
        * @brief converts a sdo response to uint32.
        * Note: std::exception are caught (error message and return false in this case)
@@ -229,9 +289,18 @@ namespace sick_line_guidance
        * @param[out] value uint32 value converted from SDO response
        * @return true on success, false otherwise
        */
-      bool convertSDOresponse(const std::string & response, uint32_t & value);
-    
-    };
+      virtual bool convertSDOresponse(const std::string & response, uint32_t & value);
+  
+      /*
+       * @brief converts a sdo response to int32.
+       * Note: std::exception are caught (error message and return false in this case)
+       * @param[in] response sdo response as string
+       * @param[out] value uint32 value converted from SDO response
+       * @return true on success, false otherwise
+       */
+      virtual bool convertSDOresponse(const std::string & response, int32_t & value);
+  
+    }; // class MeasurementHandler
   
     /*
      * @brief converts an std_msgs::UInt8/UInt16/UInt32 message to a uint8_t/uint16_t/uint32_t value.
@@ -257,7 +326,7 @@ namespace sick_line_guidance
       }
       return value;
     }
-    
+  
     /*
      * @brief converts an INT16 message (line center point lcp in millimeter) to a float lcp in meter.
      *

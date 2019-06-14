@@ -37,8 +37,13 @@ candump -ta can0 2>&1 | tee ~/.ros/log/candump.log &
 # rosservice call /driver/set_object "{node: 'node1', object: '2001sub5', value: '0x01', cached: false}"
 
 # Start ros driver canopen_chain_node, sick_line_guidance_node and sick_line_guidance_cloud_publisher
+
+# echo -e "\n# run sick_line_guidance:\n# roslaunch -v --screen sick_line_guidance sick_line_guidance.launch yaml:=sick_line_guidance_ols10.yaml\n"
+# roslaunch -v --screen sick_line_guidance sick_line_guidance.launch yaml:=sick_line_guidance_ols10.yaml 2>&1 | tee ~/.ros/log/sick_line_guidance_ols10.log # start OLS10 driver
+
 echo -e "\n# run sick_line_guidance:\n# roslaunch -v --screen sick_line_guidance sick_line_guidance.launch yaml:=sick_line_guidance_ols20.yaml\n"
 roslaunch -v --screen sick_line_guidance sick_line_guidance.launch yaml:=sick_line_guidance_ols20.yaml 2>&1 | tee ~/.ros/log/sick_line_guidance_ols20.log # start OLS20 driver
+
 # echo -e "\n# run sick_line_guidance:\n# roslaunch -v --screen sick_line_guidance sick_line_guidance.launch yaml:=sick_line_guidance_mls.yaml\n"
 # roslaunch -v --screen sick_line_guidance sick_line_guidance.launch yaml:=sick_line_guidance_mls.yaml 2>&1 | tee ~/.ros/log/sick_line_guidance_mls.log # start MLS driver
 
@@ -50,8 +55,10 @@ roslaunch -v --screen sick_line_guidance sick_line_guidance.launch yaml:=sick_li
 
 # Check errors and warnings in ros logfiles
 killall candump
-grep "\[ WARN\]" ~/.ros/log/*.log ~/.ros/log/*/ros*.log ~/.ros/log/*/sick*.log
-grep "\[ERROR\]" ~/.ros/log/*.log ~/.ros/log/*/ros*.log ~/.ros/log/*/sick*.log
+grep "\[ WARN\]" ~/.ros/log/*.log ~/.ros/log/*/ros*.log ~/.ros/log/*/sick*.log >> ~/.ros/log/ros_log_warnings.txt
+grep "\[ERROR\]" ~/.ros/log/*.log ~/.ros/log/*/ros*.log ~/.ros/log/*/sick*.log >> ~/.ros/log/ros_log_errors.txt
+cat ~/.ros/log/ros_log_warnings.txt
+cat ~/.ros/log/ros_log_errors.txt
 
 # Zip all logfiles
 mkdir ./tmp

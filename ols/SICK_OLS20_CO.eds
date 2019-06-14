@@ -1,18 +1,18 @@
 
-; This EDS file was created by the CANopen Design Tool 2.3.19.0.
+; This EDS file was created by the CANopen Design Tool 2.3.26.0.
 ; port GmbH Halle/Saale Germany, http://www.port.de, mailto:service@port.de
 
 [FileInfo]
 FileName=OLS20.eds
 FileVersion=1
-FileRevision=1
+FileRevision=2
 EDSVersion=4.0
 Description=Optical Line Guidance
 CreationTime=09:08AM
 CreationDate=08-15-2018
 CreatedBy=herrmra
-ModificationTime=10:51AM
-ModificationDate=12-03-2018
+ModificationTime=04:29PM
+ModificationDate=04-10-2019
 ModifiedBy=herrmra
 
 [DeviceInfo]
@@ -77,13 +77,14 @@ SupportedObjects=16
 16=0x1F80
 
 [ManufacturerObjects]
-SupportedObjects=6
+SupportedObjects=7
 1=0x2001
 2=0x2002
 3=0x2003
 4=0x2018
 5=0x2019
 6=0x2021
+7=0x2023
 
 [1000]
 ParameterName=Device Type
@@ -98,6 +99,7 @@ ParameterName=Error Register
 ObjectType=0x07
 DataType=0x0005
 AccessType=ro
+DefaultValue=0
 PDOMapping=0
 
 [1005]
@@ -105,6 +107,7 @@ ParameterName=COB-ID SYNC
 ObjectType=0x07
 DataType=0x0007
 AccessType=rw
+DefaultValue=0x00000080
 PDOMapping=0
 
 [1008]
@@ -112,6 +115,7 @@ ParameterName=Manufacturer Device Name
 ObjectType=0x07
 DataType=0x0009
 AccessType=const
+DefaultValue=OLS20
 PDOMapping=0
 
 [1009]
@@ -133,6 +137,7 @@ ParameterName=Guard Time
 ObjectType=0x07
 DataType=0x0006
 AccessType=rw
+DefaultValue=0x00
 PDOMapping=0
 
 [100D]
@@ -140,6 +145,7 @@ ParameterName=Life Time Factor
 ObjectType=0x07
 DataType=0x0005
 AccessType=rw
+DefaultValue=0x00
 PDOMapping=0
 
 [1014]
@@ -147,6 +153,7 @@ ParameterName=COB-ID EMCY
 ObjectType=0x07
 DataType=0x0007
 AccessType=rw
+DefaultValue=$NODEID+0x80
 PDOMapping=0
 
 [1015]
@@ -189,6 +196,7 @@ ParameterName=Producer Heartbeat Time
 ObjectType=0x07
 DataType=0x0006
 AccessType=rw
+DefaultValue=0x00
 PDOMapping=0
 
 [1018]
@@ -197,7 +205,7 @@ ParameterName=Identity Object
 ObjectType=0x09
 
 [1018sub0]
-ParameterName=number of entries
+ParameterName=Highest sub-index supported
 ObjectType=0x07
 DataType=0x0005
 AccessType=const
@@ -217,6 +225,7 @@ ParameterName=Product Code
 ObjectType=0x07
 DataType=0x0007
 AccessType=ro
+DefaultValue=0x00001004
 PDOMapping=0
 
 [1018sub3]
@@ -224,6 +233,7 @@ ParameterName=Revision number
 ObjectType=0x07
 DataType=0x0007
 AccessType=ro
+DefaultValue=1
 PDOMapping=0
 
 [1018sub4]
@@ -251,6 +261,7 @@ ParameterName=COB-ID Client -> Server
 ObjectType=0x07
 DataType=0x0007
 AccessType=ro
+DefaultValue=$NODEID+0x600
 PDOMapping=0
 
 [1200sub2]
@@ -258,6 +269,7 @@ ParameterName=COB-ID Server -> Client
 ObjectType=0x07
 DataType=0x0007
 AccessType=ro
+DefaultValue=$NODEID+0x580
 PDOMapping=0
 
 [1800]
@@ -282,7 +294,7 @@ DataType=0x0007
 AccessType=rw
 DefaultValue=$NODEID+0x180
 PDOMapping=0
-LowLimit=0x00000001
+LowLimit=0x00000181
 HighLimit=0xFFFFFFFF
 
 [1800sub2]
@@ -347,7 +359,7 @@ DataType=0x0007
 AccessType=rw
 DefaultValue=$NODEID+0x280
 PDOMapping=0
-LowLimit=0x00000001
+LowLimit=0x00000281
 HighLimit=0xFFFFFFFF
 
 [1801sub2]
@@ -400,6 +412,7 @@ ParameterName=Number of mapped objects
 ObjectType=0x07
 DataType=0x0005
 AccessType=rw
+DefaultValue=0x05
 PDOMapping=0
 LowLimit=0x00
 HighLimit=0x08
@@ -409,6 +422,7 @@ ParameterName=Mapping Entry 1
 ObjectType=0x07
 DataType=0x0007
 AccessType=rw
+DefaultValue=0x20210110
 PDOMapping=0
 
 [1A00sub2]
@@ -416,6 +430,7 @@ ParameterName=Mapping Entry 2
 ObjectType=0x07
 DataType=0x0007
 AccessType=rw
+DefaultValue=0x20210210
 PDOMapping=0
 
 [1A00sub3]
@@ -423,6 +438,7 @@ ParameterName=Mapping Entry 3
 ObjectType=0x07
 DataType=0x0007
 AccessType=rw
+DefaultValue=0x20210310
 PDOMapping=0
 
 [1A00sub4]
@@ -430,6 +446,7 @@ ParameterName=Mapping Entry 4
 ObjectType=0x07
 DataType=0x0007
 AccessType=rw
+DefaultValue=0x20210408
 PDOMapping=0
 
 [1A00sub5]
@@ -437,6 +454,7 @@ ParameterName=Mapping Entry 5
 ObjectType=0x07
 DataType=0x0007
 AccessType=rw
+DefaultValue=0x20210808
 PDOMapping=0
 
 [1A00sub6]
@@ -444,6 +462,7 @@ ParameterName=Mapping Entry 6
 ObjectType=0x07
 DataType=0x0007
 AccessType=rw
+DefaultValue=0x00000000
 PDOMapping=0
 
 [1A00sub7]
@@ -451,6 +470,7 @@ ParameterName=Mapping Entry 7
 ObjectType=0x07
 DataType=0x0007
 AccessType=rw
+DefaultValue=0x00000000
 PDOMapping=0
 
 [1A00sub8]
@@ -458,6 +478,7 @@ ParameterName=Mapping Entry 8
 ObjectType=0x07
 DataType=0x0007
 AccessType=rw
+DefaultValue=0x00000000
 PDOMapping=0
 
 [1A01]
@@ -470,6 +491,7 @@ ParameterName=Number of mapped objects
 ObjectType=0x07
 DataType=0x0005
 AccessType=rw
+DefaultValue=0x03
 PDOMapping=0
 LowLimit=0x0
 HighLimit=0x8
@@ -479,6 +501,7 @@ ParameterName=Mapping Entry 1
 ObjectType=0x07
 DataType=0x0007
 AccessType=rw
+DefaultValue=0x20210510
 PDOMapping=0
 
 [1A01sub2]
@@ -486,6 +509,7 @@ ParameterName=Mapping Entry 2
 ObjectType=0x07
 DataType=0x0007
 AccessType=rw
+DefaultValue=0x20210610
 PDOMapping=0
 
 [1A01sub3]
@@ -493,6 +517,7 @@ ParameterName=Mapping Entry 3
 ObjectType=0x07
 DataType=0x0007
 AccessType=rw
+DefaultValue=0x20210710
 PDOMapping=0
 
 [1A01sub4]
@@ -500,6 +525,7 @@ ParameterName=Mapping Entry 4
 ObjectType=0x07
 DataType=0x0007
 AccessType=rw
+DefaultValue=0x0
 PDOMapping=0
 
 [1A01sub5]
@@ -507,6 +533,7 @@ ParameterName=Mapping Entry 5
 ObjectType=0x07
 DataType=0x0007
 AccessType=rw
+DefaultValue=0x0
 PDOMapping=0
 
 [1A01sub6]
@@ -514,6 +541,7 @@ ParameterName=Mapping Entry 6
 ObjectType=0x07
 DataType=0x0007
 AccessType=rw
+DefaultValue=0x0
 PDOMapping=0
 
 [1A01sub7]
@@ -521,6 +549,7 @@ ParameterName=Mapping Entry 7
 ObjectType=0x07
 DataType=0x0007
 AccessType=rw
+DefaultValue=0x0
 PDOMapping=0
 
 [1A01sub8]
@@ -528,6 +557,7 @@ ParameterName=Mapping Entry 8
 ObjectType=0x07
 DataType=0x0007
 AccessType=rw
+DefaultValue=0x0
 PDOMapping=0
 
 [1F80]
@@ -545,7 +575,7 @@ ParameterName=Mounting parameters
 ObjectType=0x09
 
 [2001sub0]
-ParameterName=numOfEntries
+ParameterName=Highest sub-index supported
 ObjectType=0x07
 DataType=0x0005
 AccessType=const
@@ -553,50 +583,50 @@ DefaultValue=0x5
 PDOMapping=0
 
 [2001sub1]
-ParameterName=reserved1
+ParameterName=Reserved 1
 ObjectType=0x07
 DataType=0x0007
 AccessType=ro
 PDOMapping=0
 
 [2001sub2]
-ParameterName=reserved2
+ParameterName=Reserved 2
 ObjectType=0x07
 DataType=0x0007
 AccessType=ro
 PDOMapping=0
 
 [2001sub3]
-ParameterName=reserved3
+ParameterName=Reserved 3
 ObjectType=0x07
 DataType=0x0007
 AccessType=ro
 PDOMapping=0
 
 [2001sub4]
-ParameterName=reserved4
+ParameterName=Reserved 4
 ObjectType=0x07
 DataType=0x0007
 AccessType=ro
 PDOMapping=0
 
 [2001sub5]
-ParameterName=sensorFlipped
+ParameterName=Sensor flipped
 ObjectType=0x07
 DataType=0x0005
 AccessType=rw
-DefaultValue=0x00
+DefaultValue=0x0
 PDOMapping=0
 LowLimit=0x0
 HighLimit=0xFF
 
 [2002]
 SubNumber=4
-ParameterName=Tape Parameters
+ParameterName=Tape parameters
 ObjectType=0x09
 
 [2002sub0]
-ParameterName=Number of mapped objects
+ParameterName=Highest sub-index supported
 ObjectType=0x07
 DataType=0x0005
 AccessType=const
@@ -604,61 +634,69 @@ DefaultValue=0x3
 PDOMapping=0
 
 [2002sub1]
-ParameterName=Typ. Width
+ParameterName=Typ. width
 ObjectType=0x07
 DataType=0x0008
 AccessType=rw
 PDOMapping=0
 
 [2002sub2]
-ParameterName=Min. Width
+ParameterName=Min. width
 ObjectType=0x07
 DataType=0x0008
 AccessType=rw
 PDOMapping=0
 
 [2002sub3]
-ParameterName=Max. Width
+ParameterName=Max. width
 ObjectType=0x07
 DataType=0x0008
 AccessType=rw
 PDOMapping=0
 
 [2003]
-SubNumber=3
-ParameterName=Advanced Settings
+SubNumber=4
+ParameterName=Advanced settings
 ObjectType=0x09
 
 [2003sub0]
-ParameterName=Number of mapped objects
+ParameterName=Highest sub-index supported
 ObjectType=0x07
 DataType=0x0005
 AccessType=const
-DefaultValue=0x2
+DefaultValue=0x3
 PDOMapping=0
 
 [2003sub1]
-ParameterName=Off Delay Track Detection
+ParameterName=Off delay track detection
 ObjectType=0x07
 DataType=0x0006
 AccessType=rw
-DefaultValue=0x0064
+DefaultValue=0x64
 PDOMapping=0
 LowLimit=0x0
 HighLimit=0xFFFF
 
 [2003sub2]
-ParameterName=Off Delay Code Detection
+ParameterName=Off delay code detection
 ObjectType=0x07
 DataType=0x0006
 AccessType=rw
-DefaultValue=0x0064
+DefaultValue=0x64
 PDOMapping=0
 LowLimit=0x0
 HighLimit=0xFFFF
 
+[2003sub3]
+ParameterName=Position smoothing filter coefficient
+ObjectType=0x07
+DataType=0x0008
+AccessType=rw
+DefaultValue=0.0
+PDOMapping=0
+
 [2018]
-ParameterName=Device Status
+ParameterName=Device status
 ObjectType=0x07
 DataType=0x0005
 AccessType=ro
@@ -672,20 +710,20 @@ AccessType=ro
 PDOMapping=0
 
 [2021]
-SubNumber=10
+SubNumber=12
 ParameterName=Result data (LCPs)
 ObjectType=0x09
 
 [2021sub0]
-ParameterName=Number of mapped objects
+ParameterName=Highest sub-index supported
 ObjectType=0x07
 DataType=0x0005
 AccessType=const
-DefaultValue=0x9
+DefaultValue=0x0B
 PDOMapping=0
 
 [2021sub1]
-ParameterName=LCP1
+ParameterName=LCP 1
 ObjectType=0x07
 DataType=0x0003
 AccessType=ro
@@ -694,7 +732,7 @@ LowLimit=0x8000
 HighLimit=0x7FFF
 
 [2021sub2]
-ParameterName=LCP2
+ParameterName=LCP 2
 ObjectType=0x07
 DataType=0x0003
 AccessType=ro
@@ -703,7 +741,7 @@ LowLimit=0x8000
 HighLimit=0x7FFF
 
 [2021sub3]
-ParameterName=LCP3
+ParameterName=LCP 3
 ObjectType=0x07
 DataType=0x0003
 AccessType=ro
@@ -721,7 +759,7 @@ LowLimit=0x00
 HighLimit=0xFF
 
 [2021sub5]
-ParameterName=Width LCP1
+ParameterName=Width LCP 1
 ObjectType=0x07
 DataType=0x0003
 AccessType=ro
@@ -730,7 +768,7 @@ LowLimit=0x8000
 HighLimit=0x7FFF
 
 [2021sub6]
-ParameterName=Width LCP2
+ParameterName=Width LCP 2
 ObjectType=0x07
 DataType=0x0003
 AccessType=ro
@@ -739,7 +777,7 @@ LowLimit=0x8000
 HighLimit=0x7FFF
 
 [2021sub7]
-ParameterName=Width LCP3
+ParameterName=Width LCP 3
 ObjectType=0x07
 DataType=0x0003
 AccessType=ro
@@ -757,11 +795,73 @@ LowLimit=0x0
 HighLimit=0xFF
 
 [2021sub9]
-ParameterName=Extended Code
+ParameterName=Extended code
 ObjectType=0x07
 DataType=0x0007
 AccessType=ro
 PDOMapping=0
 LowLimit=0x0
 HighLimit=0xFFFFFFFF
+
+[2021subA]
+ParameterName=Barcode center point
+ObjectType=0x07
+DataType=0x0003
+AccessType=ro
+DefaultValue=0x0000
+PDOMapping=0
+LowLimit=0x8000
+HighLimit=0x7FFF
+
+[2021subB]
+ParameterName=Quality of lines
+ObjectType=0x07
+DataType=0x0005
+AccessType=ro
+DefaultValue=0x64
+PDOMapping=0
+LowLimit=0x00
+HighLimit=0x64
+
+[2023]
+SubNumber=4
+ParameterName=Line level
+ObjectType=0x09
+
+[2023sub0]
+ParameterName=Highest sub-index supported
+ObjectType=0x07
+DataType=0x0005
+AccessType=const
+DefaultValue=0x3
+PDOMapping=0
+LowLimit=0x1
+HighLimit=0x3
+
+[2023sub1]
+ParameterName=Intensity line 1
+ObjectType=0x07
+DataType=0x0005
+AccessType=ro
+PDOMapping=0
+LowLimit=0x0
+HighLimit=0x82
+
+[2023sub2]
+ParameterName=Intensity line 2
+ObjectType=0x07
+DataType=0x0005
+AccessType=ro
+PDOMapping=0
+LowLimit=0x0
+HighLimit=0x82
+
+[2023sub3]
+ParameterName=Intensity line 3
+ObjectType=0x07
+DataType=0x0005
+AccessType=ro
+PDOMapping=0
+LowLimit=0x0
+HighLimit=0x82
 

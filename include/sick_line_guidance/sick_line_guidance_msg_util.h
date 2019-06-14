@@ -120,6 +120,21 @@ namespace sick_line_guidance
     }
   
     /*
+     * @brief shortcut to convert an uint16 value to hex string "0x...".
+     *
+     * @param[in] value value to be printed
+     *
+     * @return hex string .
+     */
+    static std::string toHexString(int16_t value)
+    {
+      std::stringstream str;
+      str << toHexString(static_cast<uint16_t>(value));
+      str << "=" << value << "d";
+      return str.str();
+    }
+  
+    /*
      * @brief shortcut to convert an uint32 value to hex string "0x...".
      *
      * @param[in] value value to be printed
@@ -187,11 +202,17 @@ namespace sick_line_guidance
      * @param[in] barcode Barcode (> 255: extended barcode), , object 0x2021sub8 and 0x2021sub9 in object dictionary
      * @param[in] dev_status Device status, object 0x2018 in object dictionary
      * @param[in] error error register, object 0x1001 in object dictionary
+     * @param[in] barcodecenter barcode_center_point,  OLS20 only (0x2021subA), OLS10: always 0
+     * @param[in] linequality quality_of_lines,         OLS20 only (0x2021subB), OLS10: always 0
+     * @param[in] lineintensity1 intensity_of_lines[0], OLS20 only (0x2023sub1), OLS10: always 0
+     * @param[in] lineintensity2 intensity_of_lines[1], OLS20 only (0x2023sub2), OLS10: always 0
+     * @param[in] lineintensity3 intensity_of_lines[2], OLS20 only (0x2023sub3), OLS10: always 0
      * @param[in] msg_frame_id frame id of OLS_Measurement message
      *
      * @return parameter converted to OLS_Measurement
      */
-    static sick_line_guidance::OLS_Measurement convertOLSMessage(float lcp1, float lcp2, float lcp3, float width1, float width2, float width3, uint8_t status, uint32_t barcode, uint8_t dev_status, uint8_t error, const std::string & msg_frame_id);
+    static sick_line_guidance::OLS_Measurement convertOLSMessage(float lcp1, float lcp2, float lcp3, float width1, float width2, float width3, uint8_t status, uint32_t barcode, uint8_t dev_status, uint8_t error,
+      float barcodecenter, uint8_t linequality, uint8_t lineintensity1, uint8_t lineintensity2, uint8_t lineintensity3, const std::string & msg_frame_id);
 
     /*
      * @brief returns true, if OLS device status is okay, or false otherwise.

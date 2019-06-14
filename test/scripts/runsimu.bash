@@ -45,11 +45,14 @@ sleep 1
 # rosservice call /driver/set_object "{node: 'node1', object: '2001sub5', value: '0x01', cached: false}"
 
 # Run simulation for OLS and MLS by yaml-file configuration
-device_yamlfile_map=( "OLS:sick_line_guidance_ols20.yaml" "MLS:sick_line_guidance_mls.yaml" )
-for((device_cnt=0;device_cnt<=1;device_cnt++)) ; do
-  device=${device_yamlfile_map[$device_cnt]%%:*}
-  yaml_file=${device_yamlfile_map[$device_cnt]##*:}
-  echo -e "runsimu.bash: yaml_file for $device device: $yaml_file"
+device_settings_map=( "OLS20:sick_line_guidance_ols20.yaml;120" "OLS10:sick_line_guidance_ols10.yaml;30" "MLS:sick_line_guidance_mls.yaml;30" )
+for((device_cnt=0;device_cnt<=2;device_cnt++)) ; do
+  device=${device_settings_map[$device_cnt]%%:*}
+  settings_str=${device_settings_map[$device_cnt]##*:}
+  IFS=';' settings_list=($settings_str)
+  yaml_file=${settings_list[0]}
+  run_seconds=${settings_list[1]}
+  echo -e "runsimu.bash: settings for $device device: yaml_file $yaml_file, run for $run_seconds seconds."
 
   # Start can2ros converter
   # echo -e "\n# run ols/mls simulation:\n# roslaunch -v --screen sick_line_guidance sick_line_guidance_can2ros_node.launch\n"
@@ -86,7 +89,7 @@ for((device_cnt=0;device_cnt<=1;device_cnt++)) ; do
   # roslaunch -v sick_line_guidance sick_line_guidance.launch yaml:=$yaml_file &
 
   # Run simulation for a while
-  sleep 30
+  sleep $run_seconds
 
   # Shutdown all ros nodes - tbd: exit simulation more gently...
   echo -e "\n# runsimu.bash: Stopping rosmaster and all rosnodes...\n# rosnode kill -a ; sleep 5 ; killall rosmaster ; sleep 5"
@@ -97,10 +100,13 @@ done
 
 # Check errors and warnings in ros logfiles
 killall candump
-# rosnode kill -a
-# NUM_ERRORS=$(grep "\[ERROR\]" ~/.ros/log/*/*.log | wc -l)
-# NUM_WARNINGS=$(grep "\[ WARN\]" ~/.ros/log/*/*.log | wc -l)
-echo -e "\n# OLS/MLS simulation finished."
-grep "\[ WARN\]" ~/.ros/log/*.log ~/.ros/log/*/ros*.log ~/.ros/log/*/sick*.log
-grep "\[ERROR\]" ~/.ros/log/*.log ~/.ros/log/*/ros*.log ~/.ros/log/*/sick*.log
+echo -e "\n#\n# OLS/MLS simulation finished.\n#\n"
+grep "\[ WARN\]" ~/.ros/log/*.log ~/.ros/log/*/ros*.log ~/.ros/log/*/sick*.log >> ~/.ros/log/ros_log_warnings.txt
+grep "\[ERROR\]" ~/.ros/log/*.log ~/.ros/log/*/ros*.log ~/.ros/log/*/sick*.log >> ~/.ros/log/ros_log_errors.txt
+grep "MeasurementVerificationStatistic" ~/.ros/log/*.log ~/.ros/log/*/ros*.log ~/.ros/log/*/sick*.log >> ~/.ros/log/simulation_statistic.txt
+echo -e "\nSimulation warnings and errors:\n"
+cat ~/.ros/log/ros_log_warnings.txt
+cat ~/.ros/log/ros_log_errors.txt
+echo -e "\nSimulation statistic:\n"
+cat ~/.ros/log/simulation_statistic.txt
 

@@ -182,8 +182,10 @@ int main(int argc, char** argv)
     sick_line_guidance::CanSubscriber * p_can_subscriber = NULL;
     if (sick_device_family == "MLS")
       p_can_subscriber = new sick_line_guidance::CanMlsSubscriber(nh, can_node_id, sick_topic, sick_frame_id, initial_sensor_state, subscribe_queue_size);
-    else if (sick_device_family == "OLS")
-      p_can_subscriber = new sick_line_guidance::CanOlsSubscriber(nh, can_node_id, sick_topic, sick_frame_id, initial_sensor_state, subscribe_queue_size);
+    else if (sick_device_family == "OLS10")
+      p_can_subscriber = new sick_line_guidance::CanOls10Subscriber(nh, can_node_id, sick_topic, sick_frame_id, initial_sensor_state, subscribe_queue_size);
+    else if (sick_device_family == "OLS20")
+      p_can_subscriber = new sick_line_guidance::CanOls20Subscriber(nh, can_node_id, sick_topic, sick_frame_id, initial_sensor_state, subscribe_queue_size);
     else if (sick_device_family == "CIA401")
       p_can_subscriber = new sick_line_guidance::CanCiA401Subscriber(nh, can_node_id, sick_topic, sick_frame_id, initial_sensor_state, subscribe_queue_size);
     if(p_can_subscriber && p_can_subscriber->subscribeCanTopics())
@@ -207,6 +209,7 @@ int main(int argc, char** argv)
   ros::spin();
   
   // Deallocate resources
+  std::cout << "sick_line_guidance_node: exiting..." << std::endl;
   ROS_INFO("sick_line_guidance_node: exiting...");
   sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::EXIT);
   for(std::vector<sick_line_guidance::CanSubscriber*>::iterator iter = vecCanSubscriber.begin(); iter != vecCanSubscriber.end(); iter++)

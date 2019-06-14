@@ -59,6 +59,10 @@
 #include "sick_line_guidance/sick_line_guidance_msg_util.h"
 
 /*
+ * class CanOlsSubscriber implements the base ros subscriber to canopen ols messages.
+ */
+
+/*
  * Constructor.
  * @param[in] nh ros::NodeHandle
  * @param[in] can_nodeid can id for canopen_chain_node, f.e. "node1"
@@ -71,6 +75,7 @@ sick_line_guidance::CanOlsSubscriber::CanOlsSubscriber(ros::NodeHandle & nh, con
   const std::string & ros_topic, const std::string & ros_frameid, int initial_sensor_state, int subscribe_queue_size)
   : sick_line_guidance::CanSubscriber::CanSubscriber(nh, can_nodeid, initial_sensor_state, subscribe_queue_size)
 {
+  m_bOLS20queries = false;
   m_measurement.m_ols_state.header.frame_id = ros_frameid;
   m_measurement.m_ros_publisher = nh.advertise<sick_line_guidance::OLS_Measurement>(ros_topic, 1);
 }
@@ -159,6 +164,18 @@ void sick_line_guidance::CanOlsSubscriber::cancallbackLCP1(const boost::shared_p
 {
   boost::lock_guard<boost::mutex> publish_lockguard(m_measurement.m_measurement_mutex);
   m_measurement.m_ols_state.position[0] = convertToLCP(msg, m_measurement.m_ols_state.position[0], "OLS/LCP1");
+  if(m_bOLS20queries)
+  {
+    m_measurement.m_ols_query_quality_of_lines = true;      // OLS20 only: query object 2021subB (quality of lines, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
+    m_measurement.m_ols_query_intensity_of_lines[0] = true; // OLS20 only: query object 2023sub1 (intensity line 1, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
+  }
+  else
+  {
+    m_measurement.m_ols_state.quality_of_lines = 0;
+    m_measurement.m_ols_state.intensity_of_lines[0] = 0;
+    m_measurement.m_ols_query_quality_of_lines = false;
+    m_measurement.m_ols_query_intensity_of_lines[0] = false;
+  }
   publishOLSMeasurement();
 }
 
@@ -166,6 +183,18 @@ void sick_line_guidance::CanOlsSubscriber::cancallbackLCP2(const boost::shared_p
 {
   boost::lock_guard<boost::mutex> publish_lockguard(m_measurement.m_measurement_mutex);
   m_measurement.m_ols_state.position[1] = convertToLCP(msg, m_measurement.m_ols_state.position[1], "OLS/LCP2");
+  if(m_bOLS20queries)
+  {
+    m_measurement.m_ols_query_quality_of_lines = true;      // OLS20 only: query object 2021subB (quality of lines, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
+    m_measurement.m_ols_query_intensity_of_lines[1] = true; // OLS20 only: query object 2023sub2 (intensity line 2, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
+  }
+  else
+  {
+    m_measurement.m_ols_state.quality_of_lines = 0;
+    m_measurement.m_ols_state.intensity_of_lines[1] = 0;
+    m_measurement.m_ols_query_quality_of_lines = false;
+    m_measurement.m_ols_query_intensity_of_lines[1] = false;
+  }
   publishOLSMeasurement();
 }
 
@@ -173,6 +202,18 @@ void sick_line_guidance::CanOlsSubscriber::cancallbackLCP3(const boost::shared_p
 {
   boost::lock_guard<boost::mutex> publish_lockguard(m_measurement.m_measurement_mutex);
   m_measurement.m_ols_state.position[2] = convertToLCP(msg, m_measurement.m_ols_state.position[2], "OLS/LCP3");
+  if(m_bOLS20queries)
+  {
+    m_measurement.m_ols_query_quality_of_lines = true;      // OLS20 only: query object 2021subB (quality of lines, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
+    m_measurement.m_ols_query_intensity_of_lines[2] = true; // OLS20 only: query object 2023sub3 (intensity line 3, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
+  }
+  else
+  {
+    m_measurement.m_ols_state.quality_of_lines = 0;
+    m_measurement.m_ols_state.intensity_of_lines[2] = 0;
+    m_measurement.m_ols_query_quality_of_lines = false;
+    m_measurement.m_ols_query_intensity_of_lines[2] = false;
+  }
   publishOLSMeasurement();
 }
 
@@ -185,14 +226,24 @@ void sick_line_guidance::CanOlsSubscriber::cancallbackState(const boost::shared_
   // b) object 0x2018 in object dictionary -> measurement.dev_status
   if(!sick_line_guidance::MsgUtil::statusOK(m_measurement.m_ols_state)) // Bit 4 OLS status != 0 -> SDO request 0x1001 (error register, UINT8) and 0x2018 (device status register, UINT8)
   {
-    m_measurement.m_ols_query_device_status = true;  // query object 0x2018 (device status register, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
     m_measurement.m_ols_query_error_register = true; // query object 0x1001 (error register, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
+    if(m_bOLS20queries) // OLS20: query object 0x2018 (device status register, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
+    {
+      m_measurement.m_ols_query_device_status_u8 = true;
+      m_measurement.m_ols_query_device_status_u16 = false;
+    }
+    else // OLS10: query object 0x2018 (device status register, UINT16) in object dictionary by SDO (query runs in m_measurement in a background thread)
+    {
+      m_measurement.m_ols_query_device_status_u8 = false;
+      m_measurement.m_ols_query_device_status_u16 = true;
+    }
   }
   else
   {
     m_measurement.m_ols_state.error = 0;
     m_measurement.m_ols_state.dev_status = 0;
-    m_measurement.m_ols_query_device_status = false;
+    m_measurement.m_ols_query_device_status_u8 = false;
+    m_measurement.m_ols_query_device_status_u16 = false;
     m_measurement.m_ols_query_error_register = false;
   }
   publishOLSMeasurement();
@@ -233,6 +284,16 @@ void sick_line_guidance::CanOlsSubscriber::cancallbackCode(const boost::shared_p
     m_measurement.m_ols_query_extended_code = false;
     m_measurement.m_ols_state.extended_code = 0;
   }
+  // OLS20 only: query object 2021subA (barcode center point, INT16) in object dictionary by SDO (query runs in m_measurement in a background thread)
+  if(m_measurement.m_ols_state.barcode > 0 && m_bOLS20queries)
+  {
+    m_measurement.m_ols_query_barcode_center_point = true;
+  }
+  else
+  {
+    m_measurement.m_ols_state.barcode_center_point = 0;
+    m_measurement.m_ols_query_barcode_center_point = false;
+  }
   publishOLSMeasurement();
 }
 
@@ -259,3 +320,42 @@ void sick_line_guidance::CanOlsSubscriber::cancallbackCode(const boost::shared_p
 //   m_measurement.m_ols_state.extended_code = convertIntegerMessage<std_msgs::UInt32,uint32_t>(msg, m_measurement.m_ols_state.extended_code, 0xFFFFFFFF, "OLS/extcode");
 //   publishOLSMeasurement();
 // }
+
+/*
+ * class CanOls10Subscriber derives from CanOlsSubscriber to implements OLS10 specific handling of the ros canopen messages.
+ */
+
+/*
+ * Constructor.
+ * @param[in] nh ros::NodeHandle
+ * @param[in] can_nodeid can id for canopen_chain_node, f.e. "node1"
+ * @param[in] ros_topic topic for ros messages, f.e. "mls" or "ols"
+ * @param[in] ros_frameid frameid for ros messages, f.e. "mls_measurement_frame" or "ols_measurement_frame"
+ * @param[in] initial_sensor_state initial sensor state (f.e. 0x07 for 3 detected lines, or (1 << 4) to indicate sensor error)
+ * @param[in] subscribe_queue_size buffer size for ros messages
+ */
+sick_line_guidance::CanOls10Subscriber::CanOls10Subscriber(ros::NodeHandle & nh, const std::string & can_nodeid,
+                                                       const std::string & ros_topic, const std::string & ros_frameid, int initial_sensor_state, int subscribe_queue_size)
+  : sick_line_guidance::CanOlsSubscriber::CanOlsSubscriber(nh, can_nodeid, ros_topic, ros_frameid, initial_sensor_state, subscribe_queue_size)
+{
+}
+
+/*
+ * class CanOls20Subscriber derives from CanOlsSubscriber to implements OLS20 specific handling of the ros canopen messages.
+ */
+
+/*
+ * Constructor.
+ * @param[in] nh ros::NodeHandle
+ * @param[in] can_nodeid can id for canopen_chain_node, f.e. "node1"
+ * @param[in] ros_topic topic for ros messages, f.e. "mls" or "ols"
+ * @param[in] ros_frameid frameid for ros messages, f.e. "mls_measurement_frame" or "ols_measurement_frame"
+ * @param[in] initial_sensor_state initial sensor state (f.e. 0x07 for 3 detected lines, or (1 << 4) to indicate sensor error)
+ * @param[in] subscribe_queue_size buffer size for ros messages
+ */
+sick_line_guidance::CanOls20Subscriber::CanOls20Subscriber(ros::NodeHandle & nh, const std::string & can_nodeid,
+                                                           const std::string & ros_topic, const std::string & ros_frameid, int initial_sensor_state, int subscribe_queue_size)
+  : sick_line_guidance::CanOlsSubscriber::CanOlsSubscriber(nh, can_nodeid, ros_topic, ros_frameid, initial_sensor_state, subscribe_queue_size)
+{
+  m_bOLS20queries = true; // OLS20 only: query objects 2021subA (barcode center point, INT16), 2021subB (quality of lines, UINT8) and 2023sub1 to 2023sub3 (intensity line 1 - 3, UINT8)
+}

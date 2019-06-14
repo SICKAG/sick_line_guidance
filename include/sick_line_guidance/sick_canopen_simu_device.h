@@ -172,7 +172,7 @@ namespace sick_canopen_simu
      * reads the PDO configuration from xml-file
      *
      * @param[in] config_file configuration file with testcases for simulation
-     * @param[in] sick_device_family "OLS" or "MLS"
+     * @param[in] sick_device_family "OLS10", "OLS20" or "MLS"
      */
     virtual bool readPDOconfig(const std::string & config_file, const std::string & sick_device_family);
   
@@ -273,7 +273,8 @@ namespace sick_canopen_simu
     std::vector<MsgType> m_vec_pdo_measurements; // list of PDOs to simulate OLS or MLS device
     std::vector<SimulationListener*> m_vec_simu_listener; // list of registered listeners to the current sensor state simulated
     int m_subscribe_queue_size; // buffer size for ros messages
-    
+    uint64_t m_sdo_response_dev_state; // response to sdo request for dev_status (object 0x2018): MLS and OLS20: 0x4F18200000000000 (sdo response with UINT8 data), OLS10: 0x4B18200000000000 (sdo response with UINT16 data)
+  
   }; // SimulatorBase
   
   /*
@@ -289,6 +290,7 @@ namespace sick_canopen_simu
      *
      * @param[in] nh ros node handle
      * @param[in] config_file configuration file with testcases for OLS and MLS simulation
+     * @param[in] sick_device_family "OLS10", "OLS20" or "MLS"
      * @param[in] can_node_id node id of OLS or MLS, default: 0x0A
      * @param[in] subscribe_topic ros topic to receive input messages of type can_msgs::Frame, default: "can0"
      * @param[in] publish_topic ros topic to publish output messages of type can_msgs::Frame, default: "ros2can0"
@@ -296,7 +298,7 @@ namespace sick_canopen_simu
      * @param[in] pdo_repeat_cnt each sensor state spefied in sick_canopen_simu_cfg.xml is repeated N times before switching to the next state (default: 5 times)
      * @param[in] subscribe_queue_size buffer size for ros messages
      */
-    MLSSimulator(ros::NodeHandle & nh, const std::string & config_file, int can_node_id, const std::string & subscribe_topic, const std::string & publish_topic, const ros::Rate & pdo_rate, int pdo_repeat_cnt, int subscribe_queue_size);
+    MLSSimulator(ros::NodeHandle & nh, const std::string & config_file, const std::string & sick_device_family, int can_node_id, const std::string & subscribe_topic, const std::string & publish_topic, const ros::Rate & pdo_rate, int pdo_repeat_cnt, int subscribe_queue_size);
   
     /*
      * @brief Callbacks for ros messages. Converts incoming messages of type can_msgs::Frame to simulate a MLS device
@@ -318,10 +320,10 @@ namespace sick_canopen_simu
   }; // MLSSimulator
   
   /*
-   * Subclass OLS20Simulator extends class SimulatorBase to simulate an OLS20 device.
+   * Subclass OLSSimulator extends class SimulatorBase to simulate an OLS devices.
    *
    */
-  class OLS20Simulator : public SimulatorBase<sick_line_guidance::OLS_Measurement>
+  class OLSSimulator : public SimulatorBase<sick_line_guidance::OLS_Measurement>
   {
   public:
     
@@ -330,6 +332,7 @@ namespace sick_canopen_simu
      *
      * @param[in] nh ros node handle
      * @param[in] config_file configuration file with testcases for OLS and MLS simulation
+     * @param[in] sick_device_family "OLS10", "OLS20" or "MLS"
      * @param[in] can_node_id node id of OLS or MLS, default: 0x0A
      * @param[in] subscribe_topic ros topic to receive input messages of type can_msgs::Frame, default: "can0"
      * @param[in] publish_topic ros topic to publish output messages of type can_msgs::Frame, default: "ros2can0"
@@ -337,10 +340,10 @@ namespace sick_canopen_simu
      * @param[in] pdo_repeat_cnt each sensor state spefied in sick_canopen_simu_cfg.xml is repeated N times before switching to the next state (default: 5 times)
      * @param[in] subscribe_queue_size buffer size for ros messages
      */
-    OLS20Simulator(ros::NodeHandle & nh, const std::string & config_file, int can_node_id, const std::string & subscribe_topic, const std::string & publish_topic, const ros::Rate & pdo_rate, int pdo_repeat_cnt, int subscribe_queue_size);
+    OLSSimulator(ros::NodeHandle & nh, const std::string & config_file, const std::string & sick_device_family, int can_node_id, const std::string & subscribe_topic, const std::string & publish_topic, const ros::Rate & pdo_rate, int pdo_repeat_cnt, int subscribe_queue_size);
     
     /*
-     * @brief Callbacks for ros messages. Converts incoming messages of type can_msgs::Frame to simulate an OLS20 device
+     * @brief Callbacks for ros messages. Converts incoming messages of type can_msgs::Frame to simulate an OLS device
      * and publishes simulation results to the configured ros topic.
      *
      * param[in] msg ros message of type can_msgs::Frame
@@ -356,6 +359,56 @@ namespace sick_canopen_simu
      */
     virtual bool parseXmlPDO(TiXmlElement* xml_pdo);
     
+  }; // OLSSimulator
+  
+  /*
+   * Subclass OLS10Simulator extends class OLSSimulator to simulate an OLS10 device.
+   *
+   */
+  class OLS10Simulator : public OLSSimulator
+  {
+  public:
+    
+    /*
+     * Constructor
+     *
+     * @param[in] nh ros node handle
+     * @param[in] config_file configuration file with testcases for OLS and MLS simulation
+     * @param[in] sick_device_family "OLS10", "OLS20" or "MLS"
+     * @param[in] can_node_id node id of OLS or MLS, default: 0x0A
+     * @param[in] subscribe_topic ros topic to receive input messages of type can_msgs::Frame, default: "can0"
+     * @param[in] publish_topic ros topic to publish output messages of type can_msgs::Frame, default: "ros2can0"
+     * @param[in] pdo_rate rate of PDO (default: pdo_rate = 50, i.e. 20 ms between two PDOs or 50 PDOs per second)
+     * @param[in] pdo_repeat_cnt each sensor state spefied in sick_canopen_simu_cfg.xml is repeated N times before switching to the next state (default: 5 times)
+     * @param[in] subscribe_queue_size buffer size for ros messages
+     */
+    OLS10Simulator(ros::NodeHandle & nh, const std::string & config_file, const std::string & sick_device_family, int can_node_id, const std::string & subscribe_topic, const std::string & publish_topic, const ros::Rate & pdo_rate, int pdo_repeat_cnt, int subscribe_queue_size);
+
+  }; // OLS10Simulator
+  
+  /*
+   * Subclass OLS20Simulator extends class OLSSimulator to simulate an OLS20 device.
+   *
+   */
+  class OLS20Simulator : public OLSSimulator
+  {
+  public:
+    
+    /*
+     * Constructor
+     *
+     * @param[in] nh ros node handle
+     * @param[in] config_file configuration file with testcases for OLS and MLS simulation
+     * @param[in] sick_device_family "OLS10", "OLS20" or "MLS"
+     * @param[in] can_node_id node id of OLS or MLS, default: 0x0A
+     * @param[in] subscribe_topic ros topic to receive input messages of type can_msgs::Frame, default: "can0"
+     * @param[in] publish_topic ros topic to publish output messages of type can_msgs::Frame, default: "ros2can0"
+     * @param[in] pdo_rate rate of PDO (default: pdo_rate = 50, i.e. 20 ms between two PDOs or 50 PDOs per second)
+     * @param[in] pdo_repeat_cnt each sensor state spefied in sick_canopen_simu_cfg.xml is repeated N times before switching to the next state (default: 5 times)
+     * @param[in] subscribe_queue_size buffer size for ros messages
+     */
+    OLS20Simulator(ros::NodeHandle & nh, const std::string & config_file, const std::string & sick_device_family, int can_node_id, const std::string & subscribe_topic, const std::string & publish_topic, const ros::Rate & pdo_rate, int pdo_repeat_cnt, int subscribe_queue_size);
+
   }; // OLS20Simulator
   
 } // sick_canopen_simu

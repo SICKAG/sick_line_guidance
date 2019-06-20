@@ -108,6 +108,43 @@ namespace sick_line_guidance
   protected:
   
     /*
+     * @brief Container class for sdo query support. Just collects the pending status of a query (query pending or not pending)
+     * and the time of the last successfull query.
+     */
+    class QuerySupport
+    {
+    public:
+    
+      /*
+       * Constructor
+       * @param[in] query_jitter jitter in seconds (default: 10 ms), i.e. a sdo is requested, if the query is pending and the last successful query is out of the time jitter.
+       * By default, a sdo request is send, if the query is pending and not done within the last 10 ms.
+       */
+      QuerySupport(double query_jitter = 0.01) : m_bQueryPending(false), m_tLastQueryTime(0), m_tQueryJitter(query_jitter) {}
+    
+      /*
+       * returns the pending status, i.e. returns true if the query is pending, returns false if the query is not pending.
+       */
+      virtual bool & pending(void){ return m_bQueryPending; }
+    
+      /*
+       * returns the time of the last successful query
+       */
+      virtual ros::Time & time(void){ return m_tLastQueryTime; }
+    
+      /*
+       * returns true, if a query is required, i.e. the query is pending and the last successful query is over time, otherwise false
+       */
+      virtual bool required(void) { return m_bQueryPending && (ros::Time::now() - m_tLastQueryTime) > m_tQueryJitter; }
+  
+    protected:
+    
+      bool m_bQueryPending;         // true if the query is pending, otherwise false
+      ros::Time m_tLastQueryTime;   // time of the last successful query
+      ros::Duration m_tQueryJitter; // jitter in seconds, i.e. a sdo is requested, if the query is pending and the last successful query is out of a time jitter.
+    };
+  
+    /*
      * class MeasurementHandler: queries SDOs (if required) and publishes MLS/OLS measurement messages in a background thread
      */
     class MeasurementHandler
@@ -123,8 +160,10 @@ namespace sick_line_guidance
        * @param[in] max_query_rate max rate to query SDOs if required (default: min. 1 ms between sdo queries)
        * @param[in] schedule_publish_delay MLS and OLS measurement message are scheduled to be published 5 milliseconds after first PDO is received
        * @param[in] max_publish_delay MLS and OLS measurement message are scheduled to be published max. 2*20 milliseconds after first PDO is received, even if a sdo request is pending (max. 2 * tpdo rate)
+       * @param[in] query_jitter jitter in seconds (default: 10 ms), i.e. a sdo is requested, if the query is pending and the last successful query is out of the time jitter.
+       * By default, a sdo request is send, if the query is pending and not done within the last 10 ms.
        */
-      MeasurementHandler(ros::NodeHandle & nh, const std::string & can_nodeid, int initial_sensor_state = 0, double max_publish_rate = 1000, double max_query_rate = 1000, double schedule_publish_delay = 0.005, double max_publish_delay = 0.04);
+      MeasurementHandler(ros::NodeHandle & nh, const std::string & can_nodeid, int initial_sensor_state = 0, double max_publish_rate = 1000, double max_query_rate = 1000, double schedule_publish_delay = 0.005, double max_publish_delay = 0.04, double query_jitter = 0.01);
     
       /*
        * Destructor.
@@ -171,13 +210,13 @@ namespace sick_line_guidance
       boost::mutex m_publish_measurement_mutex;        // lock guard to schedule publishing measurements using m_publish_mls_measurement and m_publish_ols_measurement
       ros::Duration m_schedule_publish_delay;          // MLS and OLS measurement message are scheduled to be published 5 milliseconds after first PDO is received
       ros::Duration m_max_publish_delay;               // MLS and OLS measurement message are scheduled to be published max. 2*20 milliseconds after first PDO is received, even if a sdo request is pending (max. 2 * tpdo rate)
-      bool m_ols_query_extended_code;                  // true: query object 0x2021sub9 (extended code, UINT32) in object dictionary by SDO
-      bool m_ols_query_device_status_u8;               // true: query object 0x2018 (device status register, OLS20: UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
-      bool m_ols_query_device_status_u16;              // true: query object 0x2018 (device status register, OLS10: UINT16) in object dictionary by SDO (query runs in m_measurement in a background thread)
-      bool m_ols_query_error_register;                 // true: query object 0x1001 (error register, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
-      bool m_ols_query_barcode_center_point;           // true (OLS20 only): query object 2021subA (barcode center point, INT16)
-      bool m_ols_query_quality_of_lines;               // true (OLS20 only): query object 2021subB (quality of lines, UINT8)
-      bool m_ols_query_intensity_of_lines[3];          // true (OLS20 only): query object 2023sub1 to 2023sub3 (intensity lines 1 - 3, UINT8)
+      QuerySupport m_ols_query_extended_code;          // query object 0x2021sub9 (extended code, UINT32) in object dictionary by SDO, if pending
+      QuerySupport m_ols_query_device_status_u8;       // query object 0x2018 (device status register, OLS20: UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread), if pending
+      QuerySupport m_ols_query_device_status_u16;      // query object 0x2018 (device status register, OLS10: UINT16) in object dictionary by SDO (query runs in m_measurement in a background thread), if pending
+      QuerySupport m_ols_query_error_register;         // query object 0x1001 (error register, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread), if pending
+      QuerySupport m_ols_query_barcode_center_point;   // OLS20 only: query object 2021subA (barcode center point, INT16), if pending
+      QuerySupport m_ols_query_quality_of_lines;       // OLS20 only: query object 2021subB (quality of lines, UINT8), if pending
+      QuerySupport m_ols_query_intensity_of_lines[3];  // OLS20 only: query object 2023sub1 to 2023sub3 (intensity lines 1 - 3, UINT8), if pending
       boost::thread * m_measurement_publish_thread;    // background thread to publishes MLS/OLS measurement messages
       boost::thread * m_measurement_sdo_query_thread;  // background thread to query SDOs if required
       
@@ -243,29 +282,33 @@ namespace sick_line_guidance
        */
       virtual bool querySDO(const std::string & can_object_idx, std::string & can_object_value);
   
-      /*
-       * @brief queries an object value by SDO, if bQueryPending==true. After SDO query returned, output_value is set and bQueryPending cleared
-       * (assume bQueryPending==false after this function returned).
-       *
-       * @param[in+out] bQueryPending true: query object value by SDO, false: do nothing
-       * @param[in] object_index index in object dictionary, f.e. "2021sub9" for object 0x2021 subindex 9
-       * @param[out] output_value object value queried by SDO
-       * @param[in] norm_factor factor to convert object to output value, f.e. 0.001 to convert millimeter (object value) to meter (output value). Default: 1
-       *
-       * @return uint8_t value
-       */
-      template <class S, class T> void querySDOifPending(bool & bQueryPending, const std::string & object_index, T & output_value, T norm_factor)
+        /*
+         * @brief queries an object value by SDO, if bQueryPending==true. After SDO query returned, output_value is set and bQueryPending cleared
+         * (assume bQueryPending==false after this function returned).
+         *
+         * @param[in+out] query if query.required() is true, object value is queried by SDO and query is updated (not pending any more). Otherwise, nothing is done.
+         * @param[in] object_index index in object dictionary, f.e. "2021sub9" for object 0x2021 subindex 9
+         * @param[out] output_value object value queried by SDO
+         * @param[in] norm_factor factor to convert object to output value, f.e. 0.001 to convert millimeter (object value) to meter (output value). Default: 1
+         *
+         * @return uint8_t value
+         */
+      template <class S, class T> void querySDOifPending(QuerySupport & query, const std::string & object_index, T & output_value, T norm_factor)
       {
-        if(bQueryPending)
+        if(query.pending())
         {
           S sdo_value;
-          if(querySDO(object_index, sdo_value) && bQueryPending)
+          if(query.required() && querySDO(object_index, sdo_value))
           {
-            ROS_INFO_STREAM("sick_line_guidance::CanSubscriber::MeasurementHandler: [" << object_index << "]=" << sick_line_guidance::MsgUtil::toHexString(sdo_value));
-            boost::lock_guard<boost::mutex> publish_lockguard(m_measurement_mutex);
-            output_value = (norm_factor * sdo_value);
+            query.time() = ros::Time::now();
+            if(query.pending())
+            {
+              ROS_INFO_STREAM("sick_line_guidance::CanSubscriber::MeasurementHandler: [" << object_index << "]=" << sick_line_guidance::MsgUtil::toHexString(sdo_value));
+              boost::lock_guard<boost::mutex> publish_lockguard(m_measurement_mutex);
+              output_value = (norm_factor * sdo_value);
+            }
           }
-          bQueryPending = false;
+          query.pending() = false;
         }
       }
   

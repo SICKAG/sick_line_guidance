@@ -166,15 +166,15 @@ void sick_line_guidance::CanOlsSubscriber::cancallbackLCP1(const boost::shared_p
   m_measurement.m_ols_state.position[0] = convertToLCP(msg, m_measurement.m_ols_state.position[0], "OLS/LCP1");
   if(m_bOLS20queries)
   {
-    m_measurement.m_ols_query_quality_of_lines = true;      // OLS20 only: query object 2021subB (quality of lines, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
-    m_measurement.m_ols_query_intensity_of_lines[0] = true; // OLS20 only: query object 2023sub1 (intensity line 1, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
+    m_measurement.m_ols_query_quality_of_lines.pending() = true;      // OLS20 only: query object 2021subB (quality of lines, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
+    m_measurement.m_ols_query_intensity_of_lines[0].pending() = true; // OLS20 only: query object 2023sub1 (intensity line 1, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
   }
   else
   {
     m_measurement.m_ols_state.quality_of_lines = 0;
     m_measurement.m_ols_state.intensity_of_lines[0] = 0;
-    m_measurement.m_ols_query_quality_of_lines = false;
-    m_measurement.m_ols_query_intensity_of_lines[0] = false;
+    m_measurement.m_ols_query_quality_of_lines.pending() = false;
+    m_measurement.m_ols_query_intensity_of_lines[0].pending() = false;
   }
   publishOLSMeasurement();
 }
@@ -185,15 +185,15 @@ void sick_line_guidance::CanOlsSubscriber::cancallbackLCP2(const boost::shared_p
   m_measurement.m_ols_state.position[1] = convertToLCP(msg, m_measurement.m_ols_state.position[1], "OLS/LCP2");
   if(m_bOLS20queries)
   {
-    m_measurement.m_ols_query_quality_of_lines = true;      // OLS20 only: query object 2021subB (quality of lines, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
-    m_measurement.m_ols_query_intensity_of_lines[1] = true; // OLS20 only: query object 2023sub2 (intensity line 2, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
+    m_measurement.m_ols_query_quality_of_lines.pending() = true;      // OLS20 only: query object 2021subB (quality of lines, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
+    m_measurement.m_ols_query_intensity_of_lines[1].pending() = true; // OLS20 only: query object 2023sub2 (intensity line 2, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
   }
   else
   {
     m_measurement.m_ols_state.quality_of_lines = 0;
     m_measurement.m_ols_state.intensity_of_lines[1] = 0;
-    m_measurement.m_ols_query_quality_of_lines = false;
-    m_measurement.m_ols_query_intensity_of_lines[1] = false;
+    m_measurement.m_ols_query_quality_of_lines.pending() = false;
+    m_measurement.m_ols_query_intensity_of_lines[1].pending() = false;
   }
   publishOLSMeasurement();
 }
@@ -204,15 +204,15 @@ void sick_line_guidance::CanOlsSubscriber::cancallbackLCP3(const boost::shared_p
   m_measurement.m_ols_state.position[2] = convertToLCP(msg, m_measurement.m_ols_state.position[2], "OLS/LCP3");
   if(m_bOLS20queries)
   {
-    m_measurement.m_ols_query_quality_of_lines = true;      // OLS20 only: query object 2021subB (quality of lines, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
-    m_measurement.m_ols_query_intensity_of_lines[2] = true; // OLS20 only: query object 2023sub3 (intensity line 3, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
+    m_measurement.m_ols_query_quality_of_lines.pending() = true;      // OLS20 only: query object 2021subB (quality of lines, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
+    m_measurement.m_ols_query_intensity_of_lines[2].pending() = true; // OLS20 only: query object 2023sub3 (intensity line 3, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
   }
   else
   {
     m_measurement.m_ols_state.quality_of_lines = 0;
     m_measurement.m_ols_state.intensity_of_lines[2] = 0;
-    m_measurement.m_ols_query_quality_of_lines = false;
-    m_measurement.m_ols_query_intensity_of_lines[2] = false;
+    m_measurement.m_ols_query_quality_of_lines.pending() = false;
+    m_measurement.m_ols_query_intensity_of_lines[2].pending() = false;
   }
   publishOLSMeasurement();
 }
@@ -226,25 +226,25 @@ void sick_line_guidance::CanOlsSubscriber::cancallbackState(const boost::shared_
   // b) object 0x2018 in object dictionary -> measurement.dev_status
   if(!sick_line_guidance::MsgUtil::statusOK(m_measurement.m_ols_state)) // Bit 4 OLS status != 0 -> SDO request 0x1001 (error register, UINT8) and 0x2018 (device status register, UINT8)
   {
-    m_measurement.m_ols_query_error_register = true; // query object 0x1001 (error register, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
+    m_measurement.m_ols_query_error_register.pending() = true; // query object 0x1001 (error register, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
     if(m_bOLS20queries) // OLS20: query object 0x2018 (device status register, UINT8) in object dictionary by SDO (query runs in m_measurement in a background thread)
     {
-      m_measurement.m_ols_query_device_status_u8 = true;
-      m_measurement.m_ols_query_device_status_u16 = false;
+      m_measurement.m_ols_query_device_status_u8.pending() = true;
+      m_measurement.m_ols_query_device_status_u16.pending() = false;
     }
     else // OLS10: query object 0x2018 (device status register, UINT16) in object dictionary by SDO (query runs in m_measurement in a background thread)
     {
-      m_measurement.m_ols_query_device_status_u8 = false;
-      m_measurement.m_ols_query_device_status_u16 = true;
+      m_measurement.m_ols_query_device_status_u8.pending() = false;
+      m_measurement.m_ols_query_device_status_u16.pending() = true;
     }
   }
   else
   {
     m_measurement.m_ols_state.error = 0;
     m_measurement.m_ols_state.dev_status = 0;
-    m_measurement.m_ols_query_device_status_u8 = false;
-    m_measurement.m_ols_query_device_status_u16 = false;
-    m_measurement.m_ols_query_error_register = false;
+    m_measurement.m_ols_query_device_status_u8.pending() = false;
+    m_measurement.m_ols_query_device_status_u16.pending() = false;
+    m_measurement.m_ols_query_error_register.pending() = false;
   }
   publishOLSMeasurement();
 }
@@ -277,22 +277,22 @@ void sick_line_guidance::CanOlsSubscriber::cancallbackCode(const boost::shared_p
   // If barcode >= 255, we have to query object 0x2021sub9 (extended code, UINT32) in object dictionary by SDOs
   if(m_measurement.m_ols_state.barcode >= 255)
   {
-    m_measurement.m_ols_query_extended_code = true; // query object 0x2021sub9 (extended code, UINT32) in object dictionary by SDO (query runs in m_measurement in a background thread)
+    m_measurement.m_ols_query_extended_code.pending() = true; // query object 0x2021sub9 (extended code, UINT32) in object dictionary by SDO (query runs in m_measurement in a background thread)
   }
   else
   {
-    m_measurement.m_ols_query_extended_code = false;
+    m_measurement.m_ols_query_extended_code.pending() = false;
     m_measurement.m_ols_state.extended_code = 0;
   }
   // OLS20 only: query object 2021subA (barcode center point, INT16) in object dictionary by SDO (query runs in m_measurement in a background thread)
   if(m_measurement.m_ols_state.barcode > 0 && m_bOLS20queries)
   {
-    m_measurement.m_ols_query_barcode_center_point = true;
+    m_measurement.m_ols_query_barcode_center_point.pending() = true;
   }
   else
   {
     m_measurement.m_ols_state.barcode_center_point = 0;
-    m_measurement.m_ols_query_barcode_center_point = false;
+    m_measurement.m_ols_query_barcode_center_point.pending() = false;
   }
   publishOLSMeasurement();
 }

@@ -274,6 +274,7 @@ namespace sick_canopen_simu
     std::vector<SimulationListener*> m_vec_simu_listener; // list of registered listeners to the current sensor state simulated
     int m_subscribe_queue_size; // buffer size for ros messages
     uint64_t m_sdo_response_dev_state; // response to sdo request for dev_status (object 0x2018): MLS and OLS20: 0x4F18200000000000 (sdo response with UINT8 data), OLS10: 0x4B18200000000000 (sdo response with UINT16 data)
+    bool m_send_tpdo_immediately; // true (OLS10, MLS): send TPDOs immediately in all states (pre-operational and operational), false (default, OLS20): send TPDOs only in state operational
   
   }; // SimulatorBase
   

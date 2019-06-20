@@ -10,7 +10,7 @@
   <param name="mls_subscribe_topic" type="str" value="mls" />           <!-- topic for ros measurement messages (input), message type MLS_Measurement -->
   <param name="ols_subscribe_topic" type="str" value="ols" />           <!-- topic for ros measurement messages (input), message type OLS_Measurement -->
   <param name="publish_topic" type="str" value="ros2can0" />            <!-- topic for ros messages (output), message type can_msgs::Frame --> 
-  <param name="pdo_rate" type="double" value="50" />                    <!-- rate of PDOs: 50 PDOs simulated per second, i.e. 20 ms between two PDOs --> 
+  <param name="pdo_rate" type="double" value="10" />                    <!-- rate of PDOs: 50 PDOs simulated per second, i.e. 20 ms between two PDOs --> 
   <param name="pdo_repeat_cnt" type="int" value="25" />                 <!-- each sensor state spefied in sick_canopen_simu_cfg.xml is repeated 25 times before switching to the next state (sensor state changes after 0.5 seconds) --> 
   <param name="can_message_queue_size" type="int" value="16" />         <!-- buffer size for can messages -->
   <param name="sensor_state_queue_size" type="int" value="2" />         <!-- buffer size for simulated sensor states (OLS: 2 TPDOs) -->

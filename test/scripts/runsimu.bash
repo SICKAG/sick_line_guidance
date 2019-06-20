@@ -5,7 +5,7 @@ if [ ! -d ~/.ros/log ] ; then mkdir -p ~/.ros/log ; fi
 printf "\033c"
 source ../../../../install/setup.bash
 echo -e "\n# runsimu.bash: Stopping rosmaster and all rosnodes...\n# rosnode kill -a ; sleep 5 ; killall rosmaster ; sleep 5"
-rosnode kill -a ; sleep 5 ; killall rosmaster ; sleep 5
+rosnode kill -a ; sleep 5 ; killall roslaunch ; sleep 5 ; killall rosmaster ; sleep 5
 rm -rf ~/.ros/log/*
 
 # Initialize can net device, can0 by peak can adapter
@@ -29,7 +29,7 @@ ip -details link show can0
 sleep 1
 
 # Start can logging
-# printf "\033c" ; candump -ta can0 2>&1 | tee ~/.ros/log/candump.log
+# candump -ta can0 &
 # candump -ta can0 2>&1 | tee ~/.ros/log/candump.log &
 
 # Simulation with cangineberry: Upload firmware (BEDS slave) and beds-file CiA401_IO_Node3
@@ -69,7 +69,7 @@ for((device_cnt=0;device_cnt<=2;device_cnt++)) ; do
   sleep 5
 
   # Start OLS20 simulation
-  echo -e "\n# run ols/mls simulation:\n# roslaunch -v --screen sick_line_guidance sick_canopen_simu.launch device:=$device\n"
+  echo -e "\n# run ols/mls simulation:\n# roslaunch -v sick_line_guidance sick_canopen_simu.launch device:=$device\n"
   roslaunch -v --screen sick_line_guidance sick_canopen_simu.launch device:=$device 2>&1 | tee ~/.ros/log/sick_canopen_simu_$device.log &
   # echo -e "\n# run ols/mls simulation:\n# roslaunch -v sick_line_guidance sick_canopen_simu.launch device:=$device\n"
   # roslaunch -v sick_line_guidance sick_canopen_simu.launch device:=$device &
@@ -83,7 +83,7 @@ for((device_cnt=0;device_cnt<=2;device_cnt++)) ; do
   done
 
   # Start ros driver for MLS or OLS, incl. canopen_chain_node, sick_line_guidance_node and sick_line_guidance_cloud_publisher
-  echo -e "\n# run sick_line_guidance:\n# roslaunch -v --screen sick_line_guidance sick_line_guidance.launch yaml:=$yaml_file\n"
+  echo -e "\n# run sick_line_guidance:\n# roslaunch -v sick_line_guidance sick_line_guidance.launch yaml:=$yaml_file\n"
   roslaunch -v --screen sick_line_guidance sick_line_guidance.launch yaml:=$yaml_file 2>&1 | tee ~/.ros/log/$yaml_file.log &
   # echo -e "\n# run sick_line_guidance:\n# roslaunch -v sick_line_guidance sick_line_guidance.launch yaml:=$yaml_file\n"
   # roslaunch -v sick_line_guidance sick_line_guidance.launch yaml:=$yaml_file &
@@ -91,7 +91,7 @@ for((device_cnt=0;device_cnt<=2;device_cnt++)) ; do
   # Run simulation for a while
   sleep $run_seconds
 
-  # Shutdown all ros nodes - tbd: exit simulation more gently...
+  # Exit simulation, shutdown all ros nodes
   echo -e "\n# runsimu.bash: Stopping rosmaster and all rosnodes...\n# rosnode kill -a ; sleep 5 ; killall rosmaster ; sleep 5"
   rosnode kill -a ; sleep 5 ; killall rosmaster ; sleep 5
 

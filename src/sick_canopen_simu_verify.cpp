@@ -81,7 +81,7 @@ sick_canopen_simu::MeasurementVerification<MsgType>::MeasurementVerification(ros
   m_measurement_verification_error_cnt = 0;
   m_measurement_verification_ignored_cnt = 0;
   m_measurement_verification_failed = 0;
-  m_measurement_verification_jitter = 2; // max. 2 errors tolerated, since measurement messages can be sent while a SDO response is still pending
+  m_measurement_verification_jitter = 4; // max. 4 consecutive errors tolerated, since measurement messages can be sent while a SDO response is still pending (OLS20: up to 9 SDO queries required per TPDO measurement)
   m_measurement_messages_cnt = -sensor_state_queue_size; // start verification after the first two measurements
   for(typename std::list<MsgType>::iterator iter = m_sensor_states.begin(); iter != m_sensor_states.end(); iter++)
     sick_line_guidance::MsgUtil::zero(*iter);

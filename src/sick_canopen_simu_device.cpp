@@ -87,7 +87,7 @@
  */
 template<class MsgType>
 sick_canopen_simu::SimulatorBase<MsgType>::SimulatorBase(ros::NodeHandle & nh, const std::string & config_file, int can_node_id, const std::string & subscribe_topic, const std::string & publish_topic, const ros::Rate & pdo_rate, int pdo_repeat_cnt, int subscribe_queue_size)
-: m_can_state(can_node_id), m_can_node_id(can_node_id), m_pdo_rate(pdo_rate), m_pdo_repeat_cnt(pdo_repeat_cnt), m_pdo_publisher_thread(0), m_pdo_publisher_thread_running(false), m_subscribe_queue_size(subscribe_queue_size)
+: m_can_state(can_node_id), m_can_node_id(can_node_id), m_pdo_rate(pdo_rate), m_pdo_repeat_cnt(pdo_repeat_cnt), m_pdo_publisher_thread(0), m_pdo_publisher_thread_running(false), m_subscribe_queue_size(subscribe_queue_size), m_send_tpdo_immediately(false)
 {
   m_sdo_response_dev_state = 0x4F18200000000000; // response to sdo request for dev_status (object 0x2018): MLS and OLS20: 0x4F18200000000000 (sdo response with UINT8 data), OLS10: 0x4B18200000000000 (sdo response with UINT16 data)
   m_ros_publisher = nh.advertise<can_msgs::Frame>(publish_topic, 1);
@@ -370,7 +370,7 @@ void sick_canopen_simu::SimulatorBase<MsgType>::runPDOthread(void)
   while(ros::ok() && m_pdo_publisher_thread_running)
   {
     m_pdo_rate.sleep(); // ros::Duration(0.01).sleep();
-    if(m_can_state.state() == OPERATIONAL)
+    if(m_can_state.state() == OPERATIONAL || m_send_tpdo_immediately ) // OLS10, MLS: send TPDOs immediately in all states (pre-operational and operational), OLS20: send TPDOs only in state operational
     {
       // Note: Depending on the transmission type, PDOs are transmitted either asynchronously or synchronously (https://www.canopensolutions.com/english/about_canopen/pdo.shtml):
       // "Asynchronous PDOs are event-controlled ... when at least one of the process variables mapped in a PDO is altered, for example an input value, the PDO is immediately transmitted."
@@ -594,6 +594,7 @@ std::string sick_canopen_simu::SimulatorBase<MsgType>::tostring(const can_msgs::
 sick_canopen_simu::MLSSimulator::MLSSimulator(ros::NodeHandle & nh, const std::string & config_file, const std::string & sick_device_family, int can_node_id, const std::string & subscribe_topic, const std::string & publish_topic, const ros::Rate & pdo_rate, int pdo_repeat_cnt, int subscribe_queue_size)
   : SimulatorBase(nh, config_file, can_node_id, subscribe_topic, publish_topic, pdo_rate, pdo_repeat_cnt, subscribe_queue_size)
 {
+  m_send_tpdo_immediately = true; // true (OLS10, MLS): send TPDOs immediately in all states (pre-operational and operational), false (default, OLS20): send TPDOs only in state operational
   m_ros_subscriber = nh.subscribe(subscribe_topic, m_subscribe_queue_size, &sick_canopen_simu::MLSSimulator::messageHandler, this);
   if(!readPDOconfig(config_file, sick_device_family))
   {
@@ -732,6 +733,7 @@ bool sick_canopen_simu::OLSSimulator::parseXmlPDO(TiXmlElement* xml_pdo)
 sick_canopen_simu::OLS10Simulator::OLS10Simulator(ros::NodeHandle & nh, const std::string & config_file, const std::string & sick_device_family, int can_node_id, const std::string & subscribe_topic, const std::string & publish_topic, const ros::Rate & pdo_rate, int pdo_repeat_cnt, int subscribe_queue_size)
   : OLSSimulator(nh, config_file, sick_device_family, can_node_id, subscribe_topic, publish_topic, pdo_rate, pdo_repeat_cnt, subscribe_queue_size)
 {
+  m_send_tpdo_immediately = true; // true (OLS10, MLS): send TPDOs immediately in all states (pre-operational and operational), false (default, OLS20): send TPDOs only in state operational
   m_sdo_response_dev_state = 0x4B18200000000000; // response to sdo request for dev_status (object 0x2018): MLS and OLS20: 0x4F18200000000000 (sdo response with UINT8 data), OLS10: 0x4B18200000000000 (sdo response with UINT16 data)
 }
 
@@ -756,5 +758,6 @@ sick_canopen_simu::OLS10Simulator::OLS10Simulator(ros::NodeHandle & nh, const st
 sick_canopen_simu::OLS20Simulator::OLS20Simulator(ros::NodeHandle & nh, const std::string & config_file, const std::string & sick_device_family, int can_node_id, const std::string & subscribe_topic, const std::string & publish_topic, const ros::Rate & pdo_rate, int pdo_repeat_cnt, int subscribe_queue_size)
   : OLSSimulator(nh, config_file, sick_device_family, can_node_id, subscribe_topic, publish_topic, pdo_rate, pdo_repeat_cnt, subscribe_queue_size)
 {
+  m_send_tpdo_immediately = false; // true (OLS10, MLS): send TPDOs immediately in all states (pre-operational and operational), false (default, OLS20): send TPDOs only in state operational
 }
 

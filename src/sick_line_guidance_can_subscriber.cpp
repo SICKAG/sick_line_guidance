@@ -72,8 +72,10 @@
  * @param[in] max_query_rate max rate to query SDOs if required (default: min. 1 ms between sdo queries)
  * @param[in] schedule_publish_delay  MLS and OLS measurement message are scheduled to be published 5 milliseconds after first PDO is received
  * @param[in] max_publish_delay MLS and OLS measurement message are scheduled to be published max. 2*20 milliseconds after first PDO is received, even if a sdo request is pending (max. 2 * tpdo rate)
+ * @param[in] query_jitter jitter in seconds (default: 10 ms), i.e. a sdo is requested, if the query is pending and the last successful query is out of the time jitter.
+ * By default, a sdo request is send, if the query is pending and not done within the last 10 ms.
  */
-sick_line_guidance::CanSubscriber::MeasurementHandler::MeasurementHandler(ros::NodeHandle &nh, const std::string &can_nodeid, int initial_sensor_state, double max_publish_rate, double max_query_rate, double schedule_publish_delay, double max_publish_delay)
+sick_line_guidance::CanSubscriber::MeasurementHandler::MeasurementHandler(ros::NodeHandle &nh, const std::string &can_nodeid, int initial_sensor_state, double max_publish_rate, double max_query_rate, double schedule_publish_delay, double max_publish_delay, double query_jitter)
   : m_nh(nh), m_can_nodeid(can_nodeid), m_max_publish_rate(ros::Rate(max_publish_rate)), m_max_sdo_query_rate(ros::Rate(max_query_rate)), m_schedule_publish_delay(ros::Duration(schedule_publish_delay)), m_max_publish_delay(ros::Duration(max_publish_delay))
 {
   // initialize MLS/OLS sensor states
@@ -97,15 +99,15 @@ sick_line_guidance::CanSubscriber::MeasurementHandler::MeasurementHandler(ros::N
   m_publish_mls_measurement = ros::Time(0);
   m_publish_ols_measurement = ros::Time(0);
   m_publish_measurement_latest = ros::Time(0);
-  m_ols_query_extended_code = false;
-  m_ols_query_device_status_u8 = false;
-  m_ols_query_device_status_u16 = false;
-  m_ols_query_error_register = false;
-  m_ols_query_barcode_center_point = false;
-  m_ols_query_quality_of_lines = false;
-  m_ols_query_intensity_of_lines[0] = false;
-  m_ols_query_intensity_of_lines[1] = false;
-  m_ols_query_intensity_of_lines[2] = false;
+  m_ols_query_extended_code = QuerySupport(query_jitter);
+  m_ols_query_device_status_u8 = QuerySupport(query_jitter);
+  m_ols_query_device_status_u16 = QuerySupport(query_jitter);
+  m_ols_query_error_register = QuerySupport(query_jitter);
+  m_ols_query_barcode_center_point = QuerySupport(query_jitter);
+  m_ols_query_quality_of_lines = QuerySupport(query_jitter);
+  m_ols_query_intensity_of_lines[0] = QuerySupport(query_jitter);
+  m_ols_query_intensity_of_lines[1] = QuerySupport(query_jitter);
+  m_ols_query_intensity_of_lines[2] = QuerySupport(query_jitter);
   m_measurement_publish_thread = new boost::thread(&sick_line_guidance::CanSubscriber::MeasurementHandler::runMeasurementPublishThread, this);
   m_measurement_sdo_query_thread = new boost::thread(&sick_line_guidance::CanSubscriber::MeasurementHandler::runMeasurementSDOqueryThread, this);
 }
@@ -187,7 +189,6 @@ void sick_line_guidance::CanSubscriber::MeasurementHandler::runMeasurementSDOque
   while(ros::ok())
   {
     // Query SDOs if required
-    
     querySDOifPending<uint32_t, uint32_t>(m_ols_query_extended_code,         "2021sub9", m_ols_state.extended_code,         1);      // OLS: query object 0x2021sub9 (extended code, UINT32) in object dictionary by SDO
     querySDOifPending<uint8_t,  uint16_t>(m_ols_query_device_status_u8,      "2018",     m_ols_state.dev_status,            1);      // OLS20: query object 0x2018 (device status register, UINT8) in object dictionary by SDO
     querySDOifPending<uint16_t, uint16_t>(m_ols_query_device_status_u16,     "2018",     m_ols_state.dev_status,            1);      // OLS10: query object 0x2018 (device status register, UINT16) in object dictionary by SDO
@@ -197,6 +198,16 @@ void sick_line_guidance::CanSubscriber::MeasurementHandler::runMeasurementSDOque
     querySDOifPending<uint8_t,  uint8_t> (m_ols_query_intensity_of_lines[0], "2023sub1", m_ols_state.intensity_of_lines[0], 1);      // OLS20 only: query object 2023sub1 (intensity line 1, UINT8)
     querySDOifPending<uint8_t,  uint8_t> (m_ols_query_intensity_of_lines[1], "2023sub2", m_ols_state.intensity_of_lines[1], 1);      // OLS20 only: query object 2023sub2 (intensity line 2, UINT8)
     querySDOifPending<uint8_t,  uint8_t> (m_ols_query_intensity_of_lines[2], "2023sub3", m_ols_state.intensity_of_lines[2], 1);      // OLS20 only: query object 2023sub3 (intensity line 3, UINT8)
+    // Clear all pending status
+    m_ols_query_extended_code.pending() = false;
+    m_ols_query_device_status_u8.pending() = false;
+    m_ols_query_device_status_u16.pending() = false;
+    m_ols_query_error_register.pending() = false;
+    m_ols_query_barcode_center_point.pending() = false;
+    m_ols_query_quality_of_lines.pending() = false;
+    m_ols_query_intensity_of_lines[0].pending() = false;
+    m_ols_query_intensity_of_lines[1].pending() = false;
+    m_ols_query_intensity_of_lines[2].pending() = false;
     m_max_sdo_query_rate.sleep();
   }
 }
@@ -407,8 +418,8 @@ bool sick_line_guidance::CanSubscriber::MeasurementHandler::isLatestTimeForMeasu
 bool sick_line_guidance::CanSubscriber::MeasurementHandler::isSDOQueryPending(void)
 {
   boost::lock_guard<boost::mutex> schedule_lockguard(m_publish_measurement_mutex);
-  return (m_ols_query_extended_code || m_ols_query_device_status_u8 || m_ols_query_device_status_u16 || m_ols_query_error_register || m_ols_query_barcode_center_point
-    || m_ols_query_quality_of_lines || m_ols_query_intensity_of_lines[0] || m_ols_query_intensity_of_lines[1] || m_ols_query_intensity_of_lines[2]);
+  return (m_ols_query_extended_code.pending() || m_ols_query_device_status_u8.pending() || m_ols_query_device_status_u16.pending() || m_ols_query_error_register.pending() || m_ols_query_barcode_center_point.pending()
+    || m_ols_query_quality_of_lines.pending() || m_ols_query_intensity_of_lines[0].pending() || m_ols_query_intensity_of_lines[1].pending() || m_ols_query_intensity_of_lines[2].pending());
 }
 
 /*

@@ -230,6 +230,35 @@ sudo ip link set can0 type can
 sudo ip link set can0 up type can bitrate 125000 # configure the CAN bitrate, f.e. 125000 bit/s
 ```
 
+### "candump gives no answer"
+
+:question: Question: 
+```bash
+candump -ta can0
+```
+gives no results.
+
+:white_check_mark: Answer: 
+Check the baud rate of your device. For a brand new OLS10 this could be 250000 Baud. 
+For OLS10 please check the baud rate setting by using the device panel (check operation instruction of your device).
+
+### "device or resource busy"
+
+:question: Question: 
+```bash
+sudo ip link set can0 up type can bitrate 125000
+```
+gives the result:
+```bash
+sudo ip link set can0 up type can bitrate 125000
+```
+
+:white_check_mark: Answer: 
+Check the baud rate of your device. For a brand new OLS10 this could be 250000 Baud. 
+For OLS10 please check the baud rate setting by using the device panel (check operation instruction of your device).
+After checking (and changing) the baud rate unplug and replug the usb connector.
+
+
 ### "Device 'can0' does not exist"
 
 :question: Question: After start, the message

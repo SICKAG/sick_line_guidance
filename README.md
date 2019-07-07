@@ -240,7 +240,7 @@ gives no results.
 
 :white_check_mark: Answer: 
 Check the baud rate of your device. For a brand new OLS10 this could be 250000 Baud. 
-For OLS10 please check the baud rate setting by using the device panel (check operation instruction of your device).
+For OLS10 please check the baud rate setting by using the device panel (read operation manual of your device).
 
 ### "device or resource busy"
 
@@ -250,12 +250,12 @@ sudo ip link set can0 up type can bitrate 125000
 ```
 gives the result:
 ```bash
-sudo ip link set can0 up type can bitrate 125000
+RTNETLINK answers: Device or resource busy
 ```
 
 :white_check_mark: Answer: 
 Check the baud rate of your device. For a brand new OLS10 this could be 250000 Baud. 
-For OLS10 please check the baud rate setting by using the device panel (check operation instruction of your device).
+For OLS10 please check the baud rate setting by using the device panel (read operation manual of your device).
 After checking (and changing) the baud rate unplug and replug the usb connector.
 
 

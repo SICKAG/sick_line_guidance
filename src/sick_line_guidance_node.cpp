@@ -101,10 +101,10 @@ int main(int argc, char** argv)
   int initial_sensor_state = 0x07; // initial sensor state (f.e. 0x07 for 3 detected lines, or 8 to indicate sensor error)
   int subscribe_queue_size = 16;   // buffer size for ros messages
   std::string diagnostic_topic = "diagnostics";
-  nh.param("can_connect_init_at_startup", can_connect_init_at_startup, can_connect_init_at_startup); // Connect and initialize canopen service at startupt
-  nh.param("initial_sensor_state", initial_sensor_state, initial_sensor_state); // initial sensor state
-  nh.param("subscribe_queue_size", subscribe_queue_size, subscribe_queue_size);
-  nh.param("diagnostic_topic", diagnostic_topic, diagnostic_topic);
+  nh.param("/sick_line_guidance_node/can_connect_init_at_startup", can_connect_init_at_startup, can_connect_init_at_startup); // Connect and initialize canopen service at startup
+  nh.param("/sick_line_guidance_node/initial_sensor_state", initial_sensor_state, initial_sensor_state); // initial sensor state
+  nh.param("/sick_line_guidance_node/subscribe_queue_size", subscribe_queue_size, subscribe_queue_size);
+  nh.param("/sick_line_guidance_node/diagnostic_topic", diagnostic_topic, diagnostic_topic);
   ROS_INFO_STREAM("sick_line_guidance_node: version " << sick_line_guidance::Version::getVersionInfo());
   sick_line_guidance::Diagnostic::init(nh, diagnostic_topic, "sick_line_guidance_node");
   if(can_connect_init_at_startup)

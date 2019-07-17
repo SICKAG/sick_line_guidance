@@ -71,7 +71,7 @@ int main(int argc, char** argv)
   
   // Start canopen_chain_node
   std::string diagnostic_topic = "diagnostics";
-  nh.param("diagnostic_topic", diagnostic_topic, diagnostic_topic);
+  nh.param("/sick_line_guidance_can_chain_node/diagnostic_topic", diagnostic_topic, diagnostic_topic);
   sick_line_guidance::Diagnostic::init(nh, diagnostic_topic, "sick_line_guidance_can_chain_node");
   sick_line_guidance::CanopenChain canopen_chain(nh, nh_priv);
   

@@ -132,12 +132,12 @@ int main(int argc, char** argv)
   
   int subscribe_queue_size = 1;
   std::string ols_topic_publish = "ols", mls_topic_publish = "mls", cloud_topic_publish = "cloud";
-  nh.param("mls_topic_publish", mls_topic_publish, mls_topic_publish);
-  nh.param("ols_topic_publish", ols_topic_publish, ols_topic_publish);
-  nh.param("cloud_topic_publish", cloud_topic_publish, cloud_topic_publish);
-  nh.param("mls_cloud_frame_id", mls_cloud_frame_id, mls_cloud_frame_id);
-  nh.param("ols_cloud_frame_id", ols_cloud_frame_id, ols_cloud_frame_id);
-  nh.param("subscribe_queue_size", subscribe_queue_size, subscribe_queue_size); // buffer size for ros messages
+  nh.param("/sick_line_guidance_cloud_publisher/mls_topic_publish", mls_topic_publish, mls_topic_publish);
+  nh.param("/sick_line_guidance_cloud_publisher/ols_topic_publish", ols_topic_publish, ols_topic_publish);
+  nh.param("/sick_line_guidance_cloud_publisher/cloud_topic_publish", cloud_topic_publish, cloud_topic_publish);
+  nh.param("/sick_line_guidance_cloud_publisher/mls_cloud_frame_id", mls_cloud_frame_id, mls_cloud_frame_id);
+  nh.param("/sick_line_guidance_cloud_publisher/ols_cloud_frame_id", ols_cloud_frame_id, ols_cloud_frame_id);
+  nh.param("/sick_line_guidance_cloud_publisher/subscribe_queue_size", subscribe_queue_size, subscribe_queue_size); // buffer size for ros messages
   
   ROS_INFO_STREAM("sick_line_guidance_cloud_publisher: version " << sick_line_guidance::Version::getVersionInfo());
   ROS_INFO_STREAM("sick_line_guidance_cloud_publisher started.");

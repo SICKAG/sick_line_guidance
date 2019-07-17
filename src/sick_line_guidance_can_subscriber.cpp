@@ -79,22 +79,13 @@ sick_line_guidance::CanSubscriber::MeasurementHandler::MeasurementHandler(ros::N
   : m_nh(nh), m_can_nodeid(can_nodeid), m_max_publish_rate(ros::Rate(max_publish_rate)), m_max_sdo_query_rate(ros::Rate(max_query_rate)), m_schedule_publish_delay(ros::Duration(schedule_publish_delay)), m_max_publish_delay(ros::Duration(max_publish_delay))
 {
   // initialize MLS/OLS sensor states
+  sick_line_guidance::MsgUtil::zero(m_mls_state);
   m_mls_state.header.stamp = ros::Time::now();
-  m_mls_state.position = {0, 0, 0};
   m_mls_state.lcp = static_cast<uint8_t>(initial_sensor_state);
   m_mls_state.status = ((initial_sensor_state & 0x7) ? 1 : 0);
-  m_mls_state.error = 0;
+  sick_line_guidance::MsgUtil::zero(m_ols_state);
   m_ols_state.header.stamp = ros::Time::now();
-  m_ols_state.position = {0, 0, 0};
-  m_ols_state.width = {0, 0, 0};
   m_ols_state.status = initial_sensor_state;
-  m_ols_state.barcode = 0;
-  m_ols_state.dev_status = 0;
-  m_ols_state.error = 0;
-  m_ols_state.extended_code = 0;
-  m_ols_state.barcode_center_point = 0;
-  m_ols_state.quality_of_lines = 0;
-  m_ols_state.intensity_of_lines = {0, 0, 0};
   // initialize publisher thread
   m_publish_mls_measurement = ros::Time(0);
   m_publish_ols_measurement = ros::Time(0);
@@ -151,10 +142,10 @@ void sick_line_guidance::CanSubscriber::MeasurementHandler::runMeasurementPublis
       schedulePublishMLSMeasurement(false);
       bool line_good = sick_line_guidance::MsgUtil::lineOK(measurement_msg); // MLS status bit 0 ("Line good") == 0 => no line detected or line too weak, 1 => line detected, MLS #lcp (bit 0-2 == 0) => no line detected
       ROS_INFO_STREAM("sick_line_guidance::MLS_Measurement: {" << sick_line_guidance::MsgUtil::toInfo(measurement_msg) << ",line_good=" << line_good << "}");
-      if(line_good)
+      /* if(line_good)
         sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::OK, "MLS Measurement published");
       else
-        sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::NO_LINE_DETECTED, "MLS Measurement published, no line");
+        sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::NO_LINE_DETECTED, "MLS Measurement published, no line"); */
     }
     // Publish ols measurement (if one has been triggered, i.e. a pdo has been received recently)
     if(isOLSMeasurementTriggered() && (!isSDOQueryPending() || isLatestTimeForMeasurementPublishing())) // no sdo requests are pending or latest time to publish a new measurement is reached
@@ -172,10 +163,10 @@ void sick_line_guidance::CanSubscriber::MeasurementHandler::runMeasurementPublis
       ROS_INFO_STREAM("sick_line_guidance::OLS_Measurement: {" << sick_line_guidance::MsgUtil::toInfo(measurement_msg) << ",status_ok=" << status_ok << ",line_good=" << line_good << "}");
       if(!status_ok)
         sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::ERROR_STATUS, "OLS Measurement published, status error " + sick_line_guidance::MsgUtil::toHexString(measurement_msg.dev_status));
-      else if(!line_good)
+      /* else if(!line_good)
         sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::NO_LINE_DETECTED, "OLS Measurement published, no line");
       else
-        sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::OK, "OLS Measurement published");
+        sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::OK, "OLS Measurement published"); */
     }
     m_max_publish_rate.sleep();
   }
@@ -294,7 +285,7 @@ bool sick_line_guidance::CanSubscriber::MeasurementHandler::querySDO(const std::
   if(sdo_success)
   {
     ROS_INFO_STREAM("sick_line_guidance::CanopenChain::queryCanObject(" << m_can_nodeid << "): [" << can_object_idx << "]=" << can_object_value );
-    sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::OK, "SDO");
+    /* sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::OK, "SDO"); */
   }
   else
   {

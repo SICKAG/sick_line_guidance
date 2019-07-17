@@ -134,7 +134,6 @@ void sick_line_guidance::MsgUtil::zero(sick_line_guidance::OLS_Measurement & mea
   measurement_msg.barcode_center_point = 0;
   measurement_msg.quality_of_lines = 0;
   measurement_msg.intensity_of_lines = { 0, 0, 0 };
-  
 }
 
 /*

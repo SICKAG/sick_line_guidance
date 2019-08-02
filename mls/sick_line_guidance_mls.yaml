@@ -17,7 +17,7 @@ nodes:
     # MLS: 1001 = error register, 1018sub1 = VendorID, 1018sub4 = SerialNumber, TPDO1 = 0x2021sub1 to 0x2021sub4 and 0x2022
     
     # sick_line_guidance configuration of this node:
-    sick_device_family: "MLS"              # can devices of OLS or MLS family currently supported
+    sick_device_family: "MLS"              # can devices of OLS10, OLS20 or MLS family currently supported
     sick_topic: "mls"                      # MLS_Measurement messages are published in topic "/mls"
     sick_frame_id: "mls_measurement_frame" # MLS_Measurement messages are published frame_id "mls_measurement_frame"
 

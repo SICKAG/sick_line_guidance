@@ -143,6 +143,34 @@ namespace sick_canopen_simu
     {
       return (A.error == B.error);
     }
+  
+    /*
+     * @brief Compares the barcode center points of two measurements.
+     * @return true, if the barcode center points of two measurements are identical, or false otherwise.
+     */
+    static bool cmpBarcodeCenter(const MsgType &A, const MsgType &B)
+    {
+      return (std::fabs(A.barcode_center_point - B.barcode_center_point) < 0.001);
+    }
+  
+    /*
+     * @brief Compares the line quality of two measurements.
+     * @return true, if the line quality of two measurements are identical, or false otherwise.
+     */
+    static bool cmpLineQuality(const MsgType &A, const MsgType &B)
+    {
+      return (A.quality_of_lines == B.quality_of_lines);
+    }
+  
+    /*
+     * @brief Compares the line intensities of two measurements.
+     * @return true, if the line intensities of two measurements are identical, or false otherwise.
+     */
+    static bool cmpLineIntensity(const MsgType &A, const MsgType &B)
+    {
+      return (A.intensity_of_lines[0] == B.intensity_of_lines[0] && A.intensity_of_lines[1] == B.intensity_of_lines[1] && A.intensity_of_lines[2] == B.intensity_of_lines[2]);
+    }
+    
   };
 }
 #endif // __SICK_CANOPEN_SIMU_COMPARE_H_INCLUDED

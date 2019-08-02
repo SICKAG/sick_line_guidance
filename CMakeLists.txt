@@ -297,9 +297,12 @@ install(FILES
   launch/sick_line_guidance_can2ros_node.launch
   launch/sick_line_guidance_ros2can_node.launch
   launch/sick_canopen_simu.launch
-  mls/SICK-MLS.eds # mls/SICK-MLS-MLS.eds
+  mls/SICK-MLS.eds
   mls/sick_line_guidance_mls.yaml
-  ols/SICK_OLS20.eds # ols/SICK_OLS20_CO.eds
+  ols/SICK_OLS10_CO.eds
+  ols/SICK_OLS20.eds
+  ols/SICK_OLS20_CO.eds
+  ols/sick_line_guidance_ols10.yaml
   ols/sick_line_guidance_ols20.yaml
   test/cfg/sick_canopen_simu_cfg.xml
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}

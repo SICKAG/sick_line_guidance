@@ -9,7 +9,8 @@
     <sdo request="0x4002200300000000" response="0x4302200300000000" /> <!-- 2002sub3: OLS Max. Width -->
     <sdo request="0x4018100100000000" response="0x4318100156000001" /> <!-- 1018sub1: Vendor Id (OLS and MLS) -->
     <sdo request="0x4018100400000000" response="0x4318100411AE2201" /> <!-- 1018sub4: Serial number (OLS and MLS) -->
-    <sdo request="0x4018200000000000" response="0x4F18200000000000" /> <!-- 2018:     OLS dev_status -->
+    <!-- sdo request="0x4018200000000000" response="0x4B18200000000000"/ --> <!-- 2018: OLS10 dev_status (UINT16) -->
+    <sdo request="0x4018200000000000" response="0x4F18200000000000" /> <!-- 2018:     OLS20 dev_status (UINT8) -->
     <sdo request="0x4021200100000000" response="0x4B21200100000000" /> <!-- 2021sub1: LCP1 (OLS and MLS) -->
     <sdo request="0x4021200200000000" response="0x4B21200200000000" /> <!-- 2021sub2: LCP2 (OLS and MLS) -->
     <sdo request="0x4021200300000000" response="0x4B21200300000000" /> <!-- 2021sub3: LCP3 (OLS and MLS) -->
@@ -27,6 +28,12 @@
     <sdo request="0x4028200200000000" response="0x4F28200200000000" /> <!-- 2028sub2: MLS MarkerStyle -->
     <sdo request="0x4028200300000000" response="0x4F28200300000000" /> <!-- 2028sub3: MLS FailSafeMode -->
     <sdo request="0x4029200000000000" response="0x4F29200000000000" /> <!-- 2029:     MLS LockTeach -->
+    <!--Lookup table for OLS20 only SDOs: objects 2021subA (barcode center point, INT16), 2021subB (quality of lines, UINT8) and 2023sub1 to 2023sub3 (intensity line 1 - 3, UINT8) -->
+    <sdo request="0x4021200A00000000" response="0x4B21200A00000000" /> <!-- 2021subA: OLS20 Barcode center point (INT16) -->
+    <sdo request="0x4021200B00000000" response="0x4F21200B00000000" /> <!-- 2021subB: OLS20 Quality of lines (UINT8) -->
+    <sdo request="0x4023200100000000" response="0x4F23200100000000" /> <!-- 2023sub1: OLS20 Intensity of line 1 (UINT8) -->
+    <sdo request="0x4023200200000000" response="0x4F23200200000000" /> <!-- 2023sub1: OLS20 Intensity of line 2 (UINT8) -->
+    <sdo request="0x4023200300000000" response="0x4F23200300000000" /> <!-- 2023sub1: OLS20 Intensity of line 3 (UINT8) -->
     <!-- Lookup table for SDO response from SDO set request (dcf overlays, client->server: download request -> download response), -->
     <!-- f.e. SDO request = 0x23022003CDCC4C3D = 0x2302200300000000 + {4 byte data}: SDO response = 0x6002200300000000 -->
     <sdo request="0x2302200100000000" response="0x6002200100000000" /> <!-- 2002sub1: OLS Typ. Width -->
@@ -42,27 +49,62 @@
     <sdo request="0x2F28200300000000" response="0x6028200300000000" /> <!-- 2028sub3: MLS FailSafeMode -->
     <sdo request="0x2F29200000000000" response="0x6029200000000000" /> <!-- 2029:     MLS LockTeach -->  
   </SDO_config>
-  <OLS>
+  <OLS10>
     <PDO_config>
       <!-- List of PDOs to simulate OLS device -->
       <!-- Status byte OLS (0x2021sub4 in object dictionary, Bit7=MSBit to Bit0=LSBit): -->
       <!--   Bit7: CodeValid, Bit6: CodeFlipped, Bit5: x, Bit4: DeviceStatus, Bit3: x, Bit2: #LCPBit2, Bit1: #LCPBit1, Bit0: #LCPBit0 -->
       <!-- Device status byte OLS (0x2018 in object dictionary):  -->
       <!--   Bit0=0: Device okay,  Bit0=1: Device error -->
-      <pdo lcp1="0.000"  lcp2="0.000"  lcp3="0.000"  width1="0.000" width2="0.000" width3="0.000" status="0x00" barcode="0x00"       devstatus="0x00" error="0x00" frame_id="ols_simulation_frame"/>
-      <pdo lcp1="0.000"  lcp2="0.002"  lcp3="0.000"  width1="0.000" width2="0.012" width3="0.000" status="0x02" barcode="0x00"       devstatus="0x00" error="0x00" frame_id="ols_simulation_frame"/>
-      <pdo lcp1="0.000"  lcp2="0.002"  lcp3="0.003"  width1="0.000" width2="0.012" width3="0.013" status="0x03" barcode="0x00"       devstatus="0x00" error="0x00" frame_id="ols_simulation_frame"/>
-      <pdo lcp1="0.001"  lcp2="0.002"  lcp3="0.000"  width1="0.011" width2="0.012" width3="0.000" status="0x06" barcode="0x00"       devstatus="0x00" error="0x00" frame_id="ols_simulation_frame"/>
-      <pdo lcp1="0.001"  lcp2="0.002"  lcp3="0.003"  width1="0.011" width2="0.012" width3="0.013" status="0x07" barcode="0x00"       devstatus="0x00" error="0x00" frame_id="ols_simulation_frame"/>
-      <pdo lcp1="0.001"  lcp2="0.002"  lcp3="0.003"  width1="0.011" width2="0.012" width3="0.013" status="0x87" barcode="0x78"       devstatus="0x00" error="0x00" frame_id="ols_simulation_frame"/>
-      <pdo lcp1="-0.001" lcp2="-0.002" lcp3="-0.003" width1="0.021" width2="0.022" width3="0.023" status="0x87" barcode="0xEF"       devstatus="0x00" error="0x00" frame_id="ols_simulation_frame"/>
-      <pdo lcp1="0.010"  lcp2="0.020"  lcp3="0.030"  width1="0.031" width2="0.032" width3="0.033" status="0x87" barcode="0x100"      devstatus="0x00" error="0x00" frame_id="ols_simulation_frame"/>
-      <pdo lcp1="0.010"  lcp2="-0.020" lcp3="0.030"  width1="0.031" width2="0.032" width3="0.033" status="0x87" barcode="0x12345678" devstatus="0x00" error="0x00" frame_id="ols_simulation_frame"/>
-      <pdo lcp1="0.010"  lcp2="-0.020" lcp3="-0.030" width1="0.031" width2="0.032" width3="0.033" status="0xC7" barcode="0x12345678" devstatus="0x00" error="0x00" frame_id="ols_simulation_frame"/>
-      <pdo lcp1="0.000"  lcp2="0.000"  lcp3="0.000"  width1="0.000" width2="0.000" width3="0.000" status="0xD7" barcode="0xFFFFFFFF" devstatus="0x01" error="0x00" frame_id="ols_simulation_frame"/>
-      <pdo lcp1="0.000"  lcp2="0.000"  lcp3="0.000"  width1="0.000" width2="0.000" width3="0.000" status="0xD7" barcode="0xFFFFFFFF" devstatus="0xAB" error="0x00" frame_id="ols_simulation_frame"/>
+      <!-- OLS10: barcodecenter, linequality and lineintensity1-3 always 0 -->
+      <pdo lcp1="0.000"  lcp2="0.000"  lcp3="0.000"  width1="0.000" width2="0.000" width3="0.000" status="0x00" barcode="0x00"       devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.000"  lcp2="0.002"  lcp3="0.000"  width1="0.000" width2="0.012" width3="0.000" status="0x02" barcode="0x00"       devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.000"  lcp2="0.002"  lcp3="0.003"  width1="0.000" width2="0.012" width3="0.013" status="0x03" barcode="0x00"       devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.001"  lcp2="0.002"  lcp3="0.000"  width1="0.011" width2="0.012" width3="0.000" status="0x06" barcode="0x00"       devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.001"  lcp2="0.002"  lcp3="0.003"  width1="0.011" width2="0.012" width3="0.013" status="0x07" barcode="0x00"       devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.001"  lcp2="0.002"  lcp3="0.003"  width1="0.011" width2="0.012" width3="0.013" status="0x87" barcode="0x78"       devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="-0.001" lcp2="-0.002" lcp3="-0.003" width1="0.021" width2="0.022" width3="0.023" status="0x87" barcode="0xEF"       devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.010"  lcp2="0.020"  lcp3="0.030"  width1="0.031" width2="0.032" width3="0.033" status="0x87" barcode="0x100"      devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.010"  lcp2="-0.020" lcp3="0.030"  width1="0.031" width2="0.032" width3="0.033" status="0x87" barcode="0x12345678" devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.010"  lcp2="-0.020" lcp3="-0.030" width1="0.031" width2="0.032" width3="0.033" status="0xC7" barcode="0x12345678" devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.000"  lcp2="0.000"  lcp3="0.000"  width1="0.000" width2="0.000" width3="0.000" status="0xD7" barcode="0xFFFFFFFF" devstatus="0x01" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.000"  lcp2="0.000"  lcp3="0.000"  width1="0.000" width2="0.000" width3="0.000" status="0xD7" barcode="0xFFFFFFFF" devstatus="0xAB" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
     </PDO_config>
-  </OLS>
+  </OLS10>
+  <OLS20>
+    <PDO_config>
+      <!-- List of PDOs to simulate OLS-20 device -->
+      <!-- Status byte OLS (0x2021sub4 in object dictionary, Bit7=MSBit to Bit0=LSBit): -->
+      <!--   Bit7: CodeValid, Bit6: CodeFlipped, Bit5: x, Bit4: DeviceStatus, Bit3: x, Bit2: #LCPBit2, Bit1: #LCPBit1, Bit0: #LCPBit0 -->
+      <!-- Device status byte OLS (0x2018 in object dictionary):  -->
+      <!--   Bit0=0: Device okay,  Bit0=1: Device error -->
+      <!-- OLS20: simulate barcodecenter, linequality and lineintensity1-3 (OLS10: always 0) -->
+      <pdo lcp1="0.000"  lcp2="0.000"  lcp3="0.000"  width1="0.000" width2="0.000" width3="0.000" status="0x00" barcode="0x00"       devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.000"  lcp2="0.002"  lcp3="0.000"  width1="0.000" width2="0.012" width3="0.000" status="0x02" barcode="0x00"       devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.000"  lcp2="0.002"  lcp3="0.003"  width1="0.000" width2="0.012" width3="0.013" status="0x03" barcode="0x00"       devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.001"  lcp2="0.002"  lcp3="0.000"  width1="0.011" width2="0.012" width3="0.000" status="0x06" barcode="0x00"       devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.001"  lcp2="0.002"  lcp3="0.003"  width1="0.011" width2="0.012" width3="0.013" status="0x07" barcode="0x00"       devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.001"  lcp2="0.002"  lcp3="0.003"  width1="0.011" width2="0.012" width3="0.013" status="0x87" barcode="0x78"       devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="-0.001" lcp2="-0.002" lcp3="-0.003" width1="0.021" width2="0.022" width3="0.023" status="0x87" barcode="0xEF"       devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.010"  lcp2="0.020"  lcp3="0.030"  width1="0.031" width2="0.032" width3="0.033" status="0x87" barcode="0x100"      devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.010"  lcp2="-0.020" lcp3="0.030"  width1="0.031" width2="0.032" width3="0.033" status="0x87" barcode="0x12345678" devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.010"  lcp2="-0.020" lcp3="-0.030" width1="0.031" width2="0.032" width3="0.033" status="0xC7" barcode="0x12345678" devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.000"  lcp2="0.000"  lcp3="0.000"  width1="0.000" width2="0.000" width3="0.000" status="0xD7" barcode="0xFFFFFFFF" devstatus="0x01" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.000"  lcp2="0.000"  lcp3="0.000"  width1="0.000" width2="0.000" width3="0.000" status="0xD7" barcode="0xFFFFFFFF" devstatus="0xAB" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.000"  lcp2="0.000"  lcp3="0.000"  width1="0.000" width2="0.000" width3="0.000" status="0x00" barcode="0x00"       devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.000"  lcp2="0.002"  lcp3="0.000"  width1="0.000" width2="0.012" width3="0.000" status="0x02" barcode="0x00"       devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="2" lineintensity1="0" lineintensity2="5" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.000"  lcp2="0.002"  lcp3="0.003"  width1="0.000" width2="0.012" width3="0.013" status="0x03" barcode="0x00"       devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="6" lineintensity1="0" lineintensity2="5" lineintensity3="4" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.001"  lcp2="0.002"  lcp3="0.000"  width1="0.011" width2="0.012" width3="0.000" status="0x06" barcode="0x00"       devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="3" lineintensity1="1" lineintensity2="5" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.001"  lcp2="0.002"  lcp3="0.003"  width1="0.011" width2="0.012" width3="0.013" status="0x07" barcode="0x00"       devstatus="0x00" error="0x00" barcodecenter="0.000" linequality="7" lineintensity1="1" lineintensity2="5" lineintensity3="4" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.001"  lcp2="0.002"  lcp3="0.003"  width1="0.011" width2="0.012" width3="0.013" status="0x87" barcode="0x78"       devstatus="0x00" error="0x00" barcodecenter="0.010" linequality="7" lineintensity1="1" lineintensity2="5" lineintensity3="4" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="-0.001" lcp2="-0.002" lcp3="-0.003" width1="0.021" width2="0.022" width3="0.023" status="0x87" barcode="0xEF"       devstatus="0x00" error="0x00" barcodecenter="0.010" linequality="7" lineintensity1="2" lineintensity2="9" lineintensity3="6" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.010"  lcp2="0.020"  lcp3="0.030"  width1="0.031" width2="0.032" width3="0.033" status="0x87" barcode="0x100"      devstatus="0x00" error="0x00" barcodecenter="0.010" linequality="7" lineintensity1="2" lineintensity2="9" lineintensity3="6" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.010"  lcp2="-0.020" lcp3="0.030"  width1="0.031" width2="0.032" width3="0.033" status="0x87" barcode="0x12345678" devstatus="0x00" error="0x00" barcodecenter="0.050" linequality="7" lineintensity1="3" lineintensity2="9" lineintensity3="8" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.010"  lcp2="-0.020" lcp3="-0.030" width1="0.031" width2="0.032" width3="0.033" status="0xC7" barcode="0x12345678" devstatus="0x00" error="0x00" barcodecenter="0.050" linequality="7" lineintensity1="3" lineintensity2="9" lineintensity3="8" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.000"  lcp2="0.000"  lcp3="0.000"  width1="0.000" width2="0.000" width3="0.000" status="0xD7" barcode="0xFFFFFFFF" devstatus="0x01" error="0x00" barcodecenter="0.123" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+      <pdo lcp1="0.000"  lcp2="0.000"  lcp3="0.000"  width1="0.000" width2="0.000" width3="0.000" status="0xD7" barcode="0xFFFFFFFF" devstatus="0xAB" error="0x00" barcodecenter="0.123" linequality="0" lineintensity1="0" lineintensity2="0" lineintensity3="0" frame_id="ols_simulation_frame"/>
+    </PDO_config>
+  </OLS20>
   <MLS>
     <PDO_config>
       <!-- List of PDOs to simulate MLS device -->

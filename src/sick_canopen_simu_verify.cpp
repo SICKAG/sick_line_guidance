@@ -70,13 +70,18 @@
  * @param[in] nh ros node handle
  * @param[in] measurement_subscribe_topic ros topic for measurement messages, default: "mls" resp. "ols"
  * @param[in] sensor_state_queue_size buffer size for simulated sensor states, default: 2
+ * @param[in] devicename descriptional device name, f.e. "OLS20" or "MLS"
  */
 template<class MsgType>
-sick_canopen_simu::MeasurementVerification<MsgType>::MeasurementVerification(ros::NodeHandle & nh, const std::string & measurement_subscribe_topic, int sensor_state_queue_size)
+sick_canopen_simu::MeasurementVerification<MsgType>::MeasurementVerification(ros::NodeHandle & nh, const std::string & measurement_subscribe_topic, int sensor_state_queue_size, const std::string & devicename)
 {
+  m_devicename = devicename;
   m_sensor_states.resize(sensor_state_queue_size);
   m_measurement_messages.resize(sensor_state_queue_size);
+  m_measurement_verification_error_cnt = 0;
+  m_measurement_verification_ignored_cnt = 0;
   m_measurement_verification_failed = 0;
+  m_measurement_verification_jitter = 4; // max. 4 consecutive errors tolerated, since measurement messages can be sent while a SDO response is still pending (OLS20: up to 9 SDO queries required per TPDO measurement)
   m_measurement_messages_cnt = -sensor_state_queue_size; // start verification after the first two measurements
   for(typename std::list<MsgType>::iterator iter = m_sensor_states.begin(); iter != m_sensor_states.end(); iter++)
     sick_line_guidance::MsgUtil::zero(*iter);
@@ -114,16 +119,21 @@ void sick_canopen_simu::MeasurementVerification<MsgType>::pdoSent(const MsgType 
 template<class MsgType>
 bool sick_canopen_simu::MeasurementVerification<MsgType>::printStatistic(void)
 {
-  if(m_measurement_messages_cnt > 0 && m_measurement_verification_failed > 0)
+  std::stringstream message;
+  if(m_measurement_messages_cnt > 0 && m_measurement_verification_error_cnt > 0)
   {
-    ROS_WARN_STREAM("MeasurementVerification failures: " << m_measurement_verification_failed << " of " << m_measurement_messages_cnt << " measurements failed, "
-      << std::fixed << std::setprecision(2) << (m_measurement_verification_failed*100.00/m_measurement_messages_cnt) << " % failures." );
+    message << m_devicename << " MeasurementVerificationStatistic failures: " << m_measurement_verification_error_cnt << " of " << m_measurement_messages_cnt << " measurements failed, "
+      << std::fixed << std::setprecision(2) << (m_measurement_verification_error_cnt*100.00/m_measurement_messages_cnt) << " % errors, " << m_measurement_verification_ignored_cnt << " measurements ignored.";
+    std::cerr << message.str() << std::endl;
+    ROS_ERROR_STREAM(message.str());
   }
   else if(m_measurement_messages_cnt > 0)
   {
-    ROS_INFO_STREAM("MeasurementVerification successfull: " << m_measurement_verification_failed << " of " << m_measurement_messages_cnt << " measurements failed.");
+    message << m_devicename << " MeasurementVerificationStatistic okay: " << m_measurement_verification_failed << " of " << m_measurement_messages_cnt << " measurements failed, " << m_measurement_verification_ignored_cnt << " measurements ignored.";
+    std::cout << message.str() << std::endl;
+    ROS_INFO_STREAM(message.str());
   }
-  return (m_measurement_verification_failed == 0);
+  return (m_measurement_verification_error_cnt == 0);
 }
 
 /*
@@ -138,7 +148,7 @@ bool sick_canopen_simu::MeasurementVerification<MsgType>::printStatistic(void)
 template<class MsgType>
 bool sick_canopen_simu::MeasurementVerification<MsgType>::verifyMeasurement(const MsgType & measurement)
 {
-  ROS_INFO_STREAM("MeasurementVerification::verifyMeasurement(" << sick_line_guidance::MsgUtil::toInfo(measurement) << ")");
+  ROS_INFO_STREAM(m_devicename << " MeasurementVerification::verifyMeasurement(" << sick_line_guidance::MsgUtil::toInfo(measurement) << ")");
   // push measurement to m_measurement_messages (const list size, pop first element and push new measurement at the back)
   boost::lock_guard<boost::mutex> state_lockguard(m_sensor_states_mutex);
   m_measurement_messages.pop_front();
@@ -149,16 +159,28 @@ bool sick_canopen_simu::MeasurementVerification<MsgType>::verifyMeasurement(cons
     measurement_verified = verifyMeasurements(m_measurement_messages, m_sensor_states);
     if(measurement_verified)
     {
-      ROS_INFO_STREAM("MeasurementVerification::verifyMeasurement(" << sick_line_guidance::MsgUtil::toInfo(measurement) << ") succeeded.");
+      ROS_INFO_STREAM(m_devicename << " MeasurementVerification::verifyMeasurement(" << sick_line_guidance::MsgUtil::toInfo(measurement) << ") succeeded.");
+      m_measurement_verification_failed = 0;
     }
     else
     {
-      m_measurement_verification_failed++;
-      ROS_ERROR_STREAM("MeasurementVerification::verifyMeasurement(" << sick_line_guidance::MsgUtil::toInfo(measurement) << ") failed.");
+      std::stringstream errormsg;
+      errormsg << m_devicename << " MeasurementVerification::verifyMeasurement(" << sick_line_guidance::MsgUtil::toInfo(measurement) << ") failed.";
       for (typename std::list<MsgType>::iterator iter_measurement = m_measurement_messages.begin(); iter_measurement != m_measurement_messages.end(); iter_measurement++)
-        ROS_ERROR_STREAM("MeasurementVerification: measurement  " << sick_line_guidance::MsgUtil::toInfo(*iter_measurement));
+        errormsg << m_devicename << " MeasurementVerification: measurement  " << sick_line_guidance::MsgUtil::toInfo(*iter_measurement);
       for(typename std::list<MsgType>::iterator iter_state = m_sensor_states.begin(); iter_state != m_sensor_states.end(); iter_state++)
-        ROS_ERROR_STREAM("MeasurementVerification: sensor state " << sick_line_guidance::MsgUtil::toInfo(*iter_state));
+        errormsg << m_devicename << " MeasurementVerification: sensor state " << sick_line_guidance::MsgUtil::toInfo(*iter_state);
+      m_measurement_verification_failed++;
+      if(m_measurement_verification_failed > m_measurement_verification_jitter)
+      {
+        m_measurement_verification_error_cnt++; // error: 2 consecutive failures (measurement message different to simulated sensor state)
+        ROS_ERROR_STREAM(errormsg.str());
+      }
+      else
+      {
+        m_measurement_verification_ignored_cnt++; // possible error (max. 1 error tolerated, since measurement messages can be sent while a SDO response is still pending)
+        ROS_WARN_STREAM(errormsg.str());
+      }
     }
   }
   m_measurement_messages_cnt++;
@@ -213,7 +235,10 @@ bool sick_canopen_simu::MeasurementVerification<MsgType>::verifyMeasurements(std
           && verifyMeasurementData(measurement_messages, sensor_states, comparator.cmpBarcode)
              && verifyMeasurementData(measurement_messages, sensor_states, comparator.cmpDevStatus)
                 && verifyMeasurementData(measurement_messages, sensor_states, comparator.cmpExtendedCode)
-                   && verifyMeasurementData(measurement_messages, sensor_states, comparator.cmpError);
+                   && verifyMeasurementData(measurement_messages, sensor_states, comparator.cmpError)
+                      && verifyMeasurementData(measurement_messages, sensor_states, comparator.cmpBarcodeCenter)
+                         && verifyMeasurementData(measurement_messages, sensor_states, comparator.cmpLineQuality)
+                            && verifyMeasurementData(measurement_messages, sensor_states, comparator.cmpLineIntensity);
 }
 
 /*
@@ -248,9 +273,10 @@ bool sick_canopen_simu::MeasurementVerification<MsgType>::verifyMeasurementData(
  * @param[in] nh ros node handle
  * @param[in] measurement_subscribe_topic ros topic for measurement messages, default: "mls"
  * @param[in] sensor_state_queue_size buffer size for simulated sensor states, default: 2
+ * @param[in] devicename descriptional device name, f.e. "MLS"
  */
-sick_canopen_simu::MLSMeasurementVerification::MLSMeasurementVerification(ros::NodeHandle & nh, const std::string & measurement_subscribe_topic, int sensor_state_queue_size)
-  : sick_canopen_simu::MeasurementVerification<sick_line_guidance::MLS_Measurement>::MeasurementVerification(nh, measurement_subscribe_topic, sensor_state_queue_size)
+sick_canopen_simu::MLSMeasurementVerification::MLSMeasurementVerification(ros::NodeHandle & nh, const std::string & measurement_subscribe_topic, int sensor_state_queue_size, const std::string & devicename)
+  : sick_canopen_simu::MeasurementVerification<sick_line_guidance::MLS_Measurement>::MeasurementVerification(nh, measurement_subscribe_topic, sensor_state_queue_size, devicename)
 {
   m_measurement_subscriber = nh.subscribe(measurement_subscribe_topic, sensor_state_queue_size, &sick_canopen_simu::MLSMeasurementVerification::measurementCb, this);
 }
@@ -273,9 +299,10 @@ void sick_canopen_simu::MLSMeasurementVerification::measurementCb(const sick_lin
  * @param[in] nh ros node handle
  * @param[in] measurement_subscribe_topic ros topic for measurement messages, default: "ols"
  * @param[in] sensor_state_queue_size buffer size for simulated sensor states, default: 2
+ * @param[in] devicename descriptional device name, f.e. "OLS20"
  */
-sick_canopen_simu::OLSMeasurementVerification::OLSMeasurementVerification(ros::NodeHandle & nh, const std::string & measurement_subscribe_topic, int sensor_state_queue_size)
-  : sick_canopen_simu::MeasurementVerification<sick_line_guidance::OLS_Measurement>::MeasurementVerification(nh, measurement_subscribe_topic, sensor_state_queue_size)
+sick_canopen_simu::OLSMeasurementVerification::OLSMeasurementVerification(ros::NodeHandle & nh, const std::string & measurement_subscribe_topic, int sensor_state_queue_size, const std::string & devicename)
+  : sick_canopen_simu::MeasurementVerification<sick_line_guidance::OLS_Measurement>::MeasurementVerification(nh, measurement_subscribe_topic, sensor_state_queue_size, devicename)
 {
   m_measurement_subscriber = nh.subscribe(measurement_subscribe_topic, sensor_state_queue_size, &sick_canopen_simu::OLSMeasurementVerification::measurementCb, this);
 }

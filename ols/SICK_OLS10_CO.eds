@@ -4,11 +4,11 @@ ModifiedBy=Alexander Bierbaum
 Description=Optical Line Guidance Sensor
 CreationTime=09:47AM
 CreationDate=12-15-2017
-ModificationTime=03:47PM
-ModificationDate=10-30-2018
+ModificationTime=02:25PM
+ModificationDate=03-13-2019
 FileName=SICK_OLS10_CO.eds
 FileVersion=0x02
-FileRevision=0x00
+FileRevision=0x0A
 EDSVersion=4.0
 
 [DeviceInfo]
@@ -16,7 +16,7 @@ VendorName=SICK AG
 VendorNumber=0x01000056
 ProductName=Optical Line Guidance Sensor
 ProductNumber=0x00001003
-RevisionNumber=0x00000001
+RevisionNumber=0x00010001
 OrderCode=-
 BaudRate_10=1
 BaudRate_20=1
@@ -67,6 +67,7 @@ ParameterName=Error Register
 ObjectType=0x7
 DataType=0x0005
 AccessType=ro
+DefaultValue=0
 PDOMapping=0
 
 [1018]
@@ -97,6 +98,7 @@ ParameterName=Product Code
 ObjectType=0x7
 DataType=0x0007
 AccessType=ro
+DefaultValue=0x00001003
 PDOMapping=0
 
 [1018sub3]
@@ -104,6 +106,7 @@ ParameterName=Revision number
 ObjectType=0x7
 DataType=0x0007
 AccessType=ro
+DefaultValue=0x00010001
 PDOMapping=0
 
 [1018sub4]
@@ -243,6 +246,7 @@ ParameterName=Transmission Type
 ObjectType=0x7
 DataType=0x0005
 AccessType=rw
+DefaultValue=0xFF
 PDOMapping=0
 
 [1800sub4]
@@ -250,6 +254,7 @@ ParameterName=Compatibility Entry
 ObjectType=0x7
 DataType=0x0005
 AccessType=rw
+DefaultValue=0x00
 PDOMapping=0
 
 [1800sub5]
@@ -257,6 +262,7 @@ ParameterName=Event Timer
 ObjectType=0x7
 DataType=0x0006
 AccessType=rw
+DefaultValue=20
 PDOMapping=0
 
 [1801]
@@ -285,6 +291,7 @@ ParameterName=Transmission Type
 ObjectType=0x7
 DataType=0x0005
 AccessType=rw
+DefaultValue=0xFF
 PDOMapping=0
 
 [1801sub4]
@@ -292,6 +299,7 @@ ParameterName=Compatibility Entry
 ObjectType=0x7
 DataType=0x0005
 AccessType=rw
+DefaultValue=0x00
 PDOMapping=0
 
 [1801sub5]
@@ -299,6 +307,7 @@ ParameterName=Event Timer
 ObjectType=0x7
 DataType=0x0006
 AccessType=rw
+DefaultValue=0
 PDOMapping=0
 
 [1A00]
@@ -430,6 +439,7 @@ ParameterName=Flipped upside down
 ObjectType=0x7
 DataType=0x0005
 AccessType=rw
+DefaultValue=0
 PDOMapping=0
 
 [2002]
@@ -469,20 +479,28 @@ PDOMapping=0
 [2003]
 ParameterName=Advanced settings
 ObjectType=0x9
-SubNumber=2
+SubNumber=3
 
 [2003sub0]
 ParameterName=Number of advanced settings
 ObjectType=0x7
 DataType=0x0005
 AccessType=ro
-DefaultValue=1
+DefaultValue=3
 PDOMapping=0
 
 [2003sub1]
 ParameterName=Max. number of missing track readings
 ObjectType=0x7
 DataType=0x0006
+AccessType=rw
+DefaultValue=10
+PDOMapping=0
+
+[2003sub3]
+ParameterName=Position smoothing filter coefficient (dt/tau) 
+ObjectType=0x7
+DataType=0x0008
 AccessType=rw
 PDOMapping=0
 

@@ -68,8 +68,8 @@ int main(int argc, char** argv)
   int can_message_queue_size = 16; // buffer size for ros messages
   int sensor_state_queue_size = 2; // buffer size for simulated sensor states
   double pdo_rate = 50;            // rate of PDOs (default: pdo_rate = 50, i.e. 20 ms between two PDOs or 50 PDOs per second)
-  int pdo_repeat_cnt = 5;          // each sensor state spefied in sick_canopen_simu_cfg.xml is repeated 5 times before switching to the next state
-  std::string sick_device_family = "OLS"; // simulation of OLS or MLS device
+  int pdo_repeat_cnt = 25;         // each sensor state spefied in sick_canopen_simu_cfg.xml is repeated 25 times before switching to the next state (sensor state changes after 0.5 seconds)
+  std::string sick_device_family = "OLS20"; // simulation of OLS10, OLS20 or MLS device
   std::string can_subscribe_topic = "can0", publish_topic = "ros2can0"; // default can topics
   std::string mls_subscribe_topic = "mls", ols_subscribe_topic = "ols"; // default measurement topics
   std::string sick_canopen_simu_cfg_file = "sick_canopen_simu_cfg.xml"; // configuration file and testcases for OLS and MLS simulation
@@ -90,23 +90,32 @@ int main(int argc, char** argv)
   sick_canopen_simu::MLSMeasurementVerification* mls_measurement_verification = 0;
   sick_canopen_simu::OLSMeasurementVerification* ols_measurement_verification = 0;
   sick_canopen_simu::MLSSimulator* mls_simulator = 0;
-  sick_canopen_simu::OLS20Simulator* ols_simulator = 0;
+  sick_canopen_simu::OLSSimulator* ols_simulator = 0;
   if(sick_device_family == "MLS")
   {
     // Init MLS simulation
-    mls_simulator = new sick_canopen_simu::MLSSimulator(nh, sick_canopen_simu_cfg_file, can_node_id, can_subscribe_topic, publish_topic, ros::Rate(pdo_rate), pdo_repeat_cnt,can_message_queue_size);
+    mls_simulator = new sick_canopen_simu::MLSSimulator(nh, sick_canopen_simu_cfg_file, sick_device_family, can_node_id, can_subscribe_topic, publish_topic, ros::Rate(pdo_rate), pdo_repeat_cnt,can_message_queue_size);
     ROS_INFO_STREAM("sick_canopen_simu_node: MLSSimulator started, can node_id " << can_node_id << ", listening to can topic \""
       << can_subscribe_topic << "\", measurement topic \"" << mls_subscribe_topic << "\", publishing on ros topic \"" << publish_topic << "\" ...");
-    mls_measurement_verification = new sick_canopen_simu::MLSMeasurementVerification(nh, mls_subscribe_topic, sensor_state_queue_size);
+    mls_measurement_verification = new sick_canopen_simu::MLSMeasurementVerification(nh, mls_subscribe_topic, sensor_state_queue_size, sick_device_family);
     mls_simulator->registerSimulationListener(mls_measurement_verification);
   }
-  else if(sick_device_family == "OLS")
+  else if(sick_device_family == "OLS10")
+  {
+    // Init OLS10 simulation
+    ols_simulator = new sick_canopen_simu::OLS10Simulator(nh, sick_canopen_simu_cfg_file, sick_device_family, can_node_id, can_subscribe_topic, publish_topic, ros::Rate(pdo_rate), pdo_repeat_cnt, can_message_queue_size);
+    ROS_INFO_STREAM("sick_canopen_simu_node: OLS10Simulator started, can node_id " << can_node_id << ", listening to can topic \""
+      << can_subscribe_topic << "\", measurement topic \"" << ols_subscribe_topic << "\", publishing on ros topic \"" << publish_topic << "\" ...");
+    ols_measurement_verification = new sick_canopen_simu::OLSMeasurementVerification(nh, ols_subscribe_topic, sensor_state_queue_size, sick_device_family);
+    ols_simulator->registerSimulationListener(ols_measurement_verification);
+  }
+  else if(sick_device_family == "OLS20")
   {
     // Init OLS20 simulation
-    ols_simulator = new sick_canopen_simu::OLS20Simulator(nh, sick_canopen_simu_cfg_file, can_node_id, can_subscribe_topic, publish_topic, ros::Rate(pdo_rate), pdo_repeat_cnt, can_message_queue_size);
+    ols_simulator = new sick_canopen_simu::OLS20Simulator(nh, sick_canopen_simu_cfg_file, sick_device_family, can_node_id, can_subscribe_topic, publish_topic, ros::Rate(pdo_rate), pdo_repeat_cnt, can_message_queue_size);
     ROS_INFO_STREAM("sick_canopen_simu_node: OLS20Simulator started, can node_id " << can_node_id << ", listening to can topic \""
-      << can_subscribe_topic << "\", measurement topic \"" << ols_subscribe_topic << "\", publishing on ros topic \"" << publish_topic << "\" ...");
-    ols_measurement_verification = new sick_canopen_simu::OLSMeasurementVerification(nh, ols_subscribe_topic, sensor_state_queue_size);
+       << can_subscribe_topic << "\", measurement topic \"" << ols_subscribe_topic << "\", publishing on ros topic \"" << publish_topic << "\" ...");
+    ols_measurement_verification = new sick_canopen_simu::OLSMeasurementVerification(nh, ols_subscribe_topic, sensor_state_queue_size, sick_device_family);
     ols_simulator->registerSimulationListener(ols_measurement_verification);
   }
   else
@@ -118,6 +127,7 @@ int main(int argc, char** argv)
   // Run ros event loop
   ROS_INFO_STREAM("sick_canopen_simu_node: running...");
   ros::spin();
+  std::cout << "sick_canopen_simu_node: exiting..." << std::endl;
   ROS_INFO_STREAM("sick_canopen_simu_node: exiting...");
   if(mls_simulator)
   {

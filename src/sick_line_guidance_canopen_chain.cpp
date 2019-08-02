@@ -323,10 +323,10 @@ bool sick_line_guidance::CanopenChain::setCanObjectValue(ros::NodeHandle &nh, co
     sdo_success = false;
     ROS_ERROR_STREAM("sick_line_guidance::CanopenChain::setCanObjectValue(" << node_id << ", " << objectidx << ") failed: exception = " << exc.what());
   }
-  if(sdo_success)
-    sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::OK);
-  else
+  if(!sdo_success)
     sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::SDO_COMMUNICATION_ERROR, "CanopenChain::setCanObjectValue failed");
+  /* else
+    sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::OK); */
   return sdo_success;
 }
 

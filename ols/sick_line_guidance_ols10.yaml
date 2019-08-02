@@ -5,7 +5,6 @@ bus:
 sync:
   interval_ms: 10
   overflow: 0
-#
 # heartbeat: # simple heartbeat producer (optional, not supported by OLS or MLS, do not enable heartbeats)
 #   rate: 100 # heartbeat rate (milliseconds)
 #   msg: "77f#05" # message to send, cansend format: heartbeat of node 127 with status 5=Started
@@ -13,12 +12,12 @@ nodes:
   node1:
     id: 0x0A # CAN-Node-ID of can device, default: Node-ID 10=0x0A for OLS and MLS
     eds_pkg: sick_line_guidance # package name for relative path
-    eds_file: SICK_OLS20_CO.eds    # path to EDS/DCF file
+    eds_file: SICK_OLS10_CO.eds    # path to EDS/DCF file
     publish: ["1001","1018sub1","1018sub4","2021sub1!","2021sub2!","2021sub3!","2021sub4!","2021sub5!","2021sub6!","2021sub7!","2021sub8!"]
-    # OLS20: 1001 = error register, 1018sub1 = VendorID, 1018sub4 = SerialNumber, TPDOs 0x2021sub1 to 0x2021sub8
+    # OLS10: 1001 = error register, 1018sub1 = VendorID, 1018sub4 = SerialNumber, TPDOs 0x2021sub1 to 0x2021sub8
     
     # sick_line_guidance configuration of this node:
-    sick_device_family: "OLS20"            # can devices currently supported: "OLS10", "OLS20" or "MLS"
+    sick_device_family: "OLS10"            # can devices currently supported: "OLS10", "OLS20" or "MLS"
     sick_topic: "ols"                      # OLS_Measurement messages are published in topic "/ols"
     sick_frame_id: "ols_measurement_frame" # OLS_Measurement messages are published with frame_id "ols_measurement_frame"
 

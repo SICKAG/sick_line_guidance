@@ -87,8 +87,9 @@ namespace sick_canopen_simu
      * @param[in] nh ros node handle
      * @param[in] measurement_subscribe_topic ros topic for measurement messages, default: "mls" resp. "ols"
      * @param[in] sensor_state_queue_size buffer size for simulated sensor states, default: 2
+     * @param[in] devicename descriptional device name, f.e. "OLS20" or "MLS"
      */
-    MeasurementVerification(ros::NodeHandle & nh, const std::string & measurement_subscribe_topic, int sensor_state_queue_size);
+    MeasurementVerification(ros::NodeHandle & nh, const std::string & measurement_subscribe_topic, int sensor_state_queue_size, const std::string & devicename);
   
     /*
      * Destructor
@@ -150,12 +151,16 @@ namespace sick_canopen_simu
     /*
      * member variables
      */
-    ros::Subscriber m_measurement_subscriber;  // subscriber ros measurement messages from sick_line_guidance driver
-    std::list<MsgType> m_sensor_states;        // list of sensor states from simulation
-    std::list<MsgType> m_measurement_messages; // list of measurement messages from sick_line_guidance driver
-    boost::mutex m_sensor_states_mutex;        // lock guard for access to m_vec_sensor_states
-    int m_measurement_messages_cnt;            // reporting and statistics: number of verified measurement messages
-    int m_measurement_verification_failed;     // reporting and statistics: number of measurement messages with verification failures
+    std::string m_devicename;                   // descriptional device name, f.e. "OLS20" or "MLS"
+    ros::Subscriber m_measurement_subscriber;   // subscriber ros measurement messages from sick_line_guidance driver
+    std::list<MsgType> m_sensor_states;         // list of sensor states from simulation
+    std::list<MsgType> m_measurement_messages;  // list of measurement messages from sick_line_guidance driver
+    boost::mutex m_sensor_states_mutex;         // lock guard for access to m_vec_sensor_states
+    int m_measurement_messages_cnt;             // reporting and statistics: number of verified measurement messages
+    int m_measurement_verification_error_cnt;   // reporting and statistics: number of measurement messages with verification errors
+    int m_measurement_verification_ignored_cnt; // reporting and statistics: number of measurement messages with verification ignored (f.e. SDO response was still pending)
+    int m_measurement_verification_failed;      // reporting and statistics: messages with verification errors
+    int m_measurement_verification_jitter;      // reporting and statistics: verification jitter (max. 1 error tolerated, since measurement messages can be sent while a SDO response is still pending)
     
   }; // MeasurementVerification
   
@@ -173,8 +178,9 @@ namespace sick_canopen_simu
      * @param[in] nh ros node handle
      * @param[in] measurement_subscribe_topic ros topic for measurement messages, default: "mls"
      * @param[in] sensor_state_queue_size buffer size for simulated sensor states, default: 2
+     * @param[in] devicename descriptional device name, f.e. "MLS"
      */
-    MLSMeasurementVerification(ros::NodeHandle & nh, const std::string & measurement_subscribe_topic, int sensor_state_queue_size);
+    MLSMeasurementVerification(ros::NodeHandle & nh, const std::string & measurement_subscribe_topic, int sensor_state_queue_size, const std::string & devicename);
   
     /*
      * @brief Callback for measurement messages, called whenever the sick_line_guidance ros driver publishes a
@@ -201,8 +207,9 @@ namespace sick_canopen_simu
      * @param[in] nh ros node handle
      * @param[in] measurement_subscribe_topic ros topic for measurement messages, default: "ols"
      * @param[in] sensor_state_queue_size buffer size for simulated sensor states, default: 2
+     * @param[in] devicename descriptional device name, f.e. "OLS20"
      */
-    OLSMeasurementVerification(ros::NodeHandle & nh, const std::string & measurement_subscribe_topic, int sensor_state_queue_size);
+    OLSMeasurementVerification(ros::NodeHandle & nh, const std::string & measurement_subscribe_topic, int sensor_state_queue_size, const std::string & devicename);
   
     /*
      * @brief Callback for measurement messages, called whenever the sick_line_guidance ros driver publishes a

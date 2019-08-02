@@ -108,7 +108,7 @@ namespace sick_line_guidance
      */
     void stop()
     {
-      m_socketcan_running = true;
+      m_socketcan_running = false;
       if(m_socketcan_thread)
       {
         m_socketcan_interface->shutdown();
@@ -232,7 +232,8 @@ int main(int argc, char** argv)
   
   // Run ros event loop
   ros::spin();
-
+  
+  std::cout << "sick_line_guidance_can2ros_node: exiting..." << std::endl;
   ROS_INFO("sick_line_guidance_can2ros_node: exiting...");
   socketcan_listener.stop();
   p_socketcan_interface = 0;

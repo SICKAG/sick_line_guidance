@@ -57,7 +57,7 @@
  *  Copyright 2019 Ing.-Buero Dr. Michael Lehning
  * 
  */
-
+#include <cstdint>
 #include "sick_line_guidance/sick_line_guidance_canopen_chain.h"
 #include "sick_line_guidance/sick_line_guidance_can_subscriber.h"
 #include "sick_line_guidance/sick_line_guidance_diagnostic.h"
@@ -71,30 +71,34 @@
  * @param[in] max_publish_rate max rate to publish OLS/MLS measurement messages (default: min. 1 ms between two measurement messages)
  * @param[in] max_query_rate max rate to query SDOs if required (default: min. 1 ms between sdo queries)
  * @param[in] schedule_publish_delay  MLS and OLS measurement message are scheduled to be published 5 milliseconds after first PDO is received
+ * @param[in] max_publish_delay MLS and OLS measurement message are scheduled to be published max. 2*20 milliseconds after first PDO is received, even if a sdo request is pending (max. 2 * tpdo rate)
+ * @param[in] query_jitter jitter in seconds (default: 10 ms), i.e. a sdo is requested, if the query is pending and the last successful query is out of the time jitter.
+ * By default, a sdo request is send, if the query is pending and not done within the last 10 ms.
  */
-sick_line_guidance::CanSubscriber::MeasurementHandler::MeasurementHandler(ros::NodeHandle &nh, const std::string &can_nodeid, int initial_sensor_state, double max_publish_rate, double max_query_rate, double schedule_publish_delay)
-  : m_nh(nh), m_can_nodeid(can_nodeid), m_max_publish_rate(ros::Rate(max_publish_rate)), m_max_sdo_query_rate(ros::Rate(max_query_rate)), m_schedule_publish_delay(ros::Duration(schedule_publish_delay))
+sick_line_guidance::CanSubscriber::MeasurementHandler::MeasurementHandler(ros::NodeHandle &nh, const std::string &can_nodeid, int initial_sensor_state, double max_publish_rate, double max_query_rate, double schedule_publish_delay, double max_publish_delay, double query_jitter)
+  : m_nh(nh), m_can_nodeid(can_nodeid), m_max_publish_rate(ros::Rate(max_publish_rate)), m_max_sdo_query_rate(ros::Rate(max_query_rate)), m_schedule_publish_delay(ros::Duration(schedule_publish_delay)), m_max_publish_delay(ros::Duration(max_publish_delay))
 {
   // initialize MLS/OLS sensor states
+  sick_line_guidance::MsgUtil::zero(m_mls_state);
   m_mls_state.header.stamp = ros::Time::now();
-  m_mls_state.position = {0, 0, 0};
   m_mls_state.lcp = static_cast<uint8_t>(initial_sensor_state);
   m_mls_state.status = ((initial_sensor_state & 0x7) ? 1 : 0);
-  m_mls_state.error = 0;
+  sick_line_guidance::MsgUtil::zero(m_ols_state);
   m_ols_state.header.stamp = ros::Time::now();
-  m_ols_state.position = {0, 0, 0};
-  m_ols_state.width = {0, 0, 0};
   m_ols_state.status = initial_sensor_state;
-  m_ols_state.barcode = 0;
-  m_ols_state.dev_status = 0;
-  m_ols_state.error = 0;
-  m_ols_state.extended_code = 0;
   // initialize publisher thread
   m_publish_mls_measurement = ros::Time(0);
   m_publish_ols_measurement = ros::Time(0);
-  m_ols_query_extended_code = false;
-  m_ols_query_device_status = false;
-  m_ols_query_error_register = false;
+  m_publish_measurement_latest = ros::Time(0);
+  m_ols_query_extended_code = QuerySupport(query_jitter);
+  m_ols_query_device_status_u8 = QuerySupport(query_jitter);
+  m_ols_query_device_status_u16 = QuerySupport(query_jitter);
+  m_ols_query_error_register = QuerySupport(query_jitter);
+  m_ols_query_barcode_center_point = QuerySupport(query_jitter);
+  m_ols_query_quality_of_lines = QuerySupport(query_jitter);
+  m_ols_query_intensity_of_lines[0] = QuerySupport(query_jitter);
+  m_ols_query_intensity_of_lines[1] = QuerySupport(query_jitter);
+  m_ols_query_intensity_of_lines[2] = QuerySupport(query_jitter);
   m_measurement_publish_thread = new boost::thread(&sick_line_guidance::CanSubscriber::MeasurementHandler::runMeasurementPublishThread, this);
   m_measurement_sdo_query_thread = new boost::thread(&sick_line_guidance::CanSubscriber::MeasurementHandler::runMeasurementSDOqueryThread, this);
 }
@@ -125,7 +129,7 @@ void sick_line_guidance::CanSubscriber::MeasurementHandler::runMeasurementPublis
 {
   while(ros::ok())
   {
-    // Publish mls measurement
+    // Publish mls measurement (if one has been triggered, i.e. a pdo has been received recently)
     if(isMLSMeasurementTriggered())
     {
       sick_line_guidance::MLS_Measurement measurement_msg;
@@ -138,14 +142,13 @@ void sick_line_guidance::CanSubscriber::MeasurementHandler::runMeasurementPublis
       schedulePublishMLSMeasurement(false);
       bool line_good = sick_line_guidance::MsgUtil::lineOK(measurement_msg); // MLS status bit 0 ("Line good") == 0 => no line detected or line too weak, 1 => line detected, MLS #lcp (bit 0-2 == 0) => no line detected
       ROS_INFO_STREAM("sick_line_guidance::MLS_Measurement: {" << sick_line_guidance::MsgUtil::toInfo(measurement_msg) << ",line_good=" << line_good << "}");
-      if(line_good)
+      /* if(line_good)
         sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::OK, "MLS Measurement published");
       else
-        sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::NO_LINE_DETECTED, "MLS Measurement published, no line");
+        sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::NO_LINE_DETECTED, "MLS Measurement published, no line"); */
     }
-    // Publish ols measurement
-    bool sdo_query_pending = (m_ols_query_extended_code || m_ols_query_device_status || m_ols_query_error_register);
-    if(!sdo_query_pending && isOLSMeasurementTriggered())
+    // Publish ols measurement (if one has been triggered, i.e. a pdo has been received recently)
+    if(isOLSMeasurementTriggered() && (!isSDOQueryPending() || isLatestTimeForMeasurementPublishing())) // no sdo requests are pending or latest time to publish a new measurement is reached
     {
       sick_line_guidance::OLS_Measurement measurement_msg;
       {
@@ -155,16 +158,15 @@ void sick_line_guidance::CanSubscriber::MeasurementHandler::runMeasurementPublis
       }
       m_ros_publisher.publish(measurement_msg);
       schedulePublishOLSMeasurement(false);
-  
       bool status_ok = sick_line_guidance::MsgUtil::statusOK(measurement_msg); // OLS status bit 4: 0 => Sensor ok, 1 => Sensor not ok => 0x2018 (measurement_msg.dev_status)
       bool line_good = status_ok && sick_line_guidance::MsgUtil::lineOK(measurement_msg); // Bit 0-2 OLS status == 0 => no line found
       ROS_INFO_STREAM("sick_line_guidance::OLS_Measurement: {" << sick_line_guidance::MsgUtil::toInfo(measurement_msg) << ",status_ok=" << status_ok << ",line_good=" << line_good << "}");
       if(!status_ok)
         sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::ERROR_STATUS, "OLS Measurement published, status error " + sick_line_guidance::MsgUtil::toHexString(measurement_msg.dev_status));
-      else if(!line_good)
+      /* else if(!line_good)
         sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::NO_LINE_DETECTED, "OLS Measurement published, no line");
       else
-        sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::OK, "OLS Measurement published");
+        sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::OK, "OLS Measurement published"); */
     }
     m_max_publish_rate.sleep();
   }
@@ -178,41 +180,25 @@ void sick_line_guidance::CanSubscriber::MeasurementHandler::runMeasurementSDOque
   while(ros::ok())
   {
     // Query SDOs if required
-    uint8_t sdo_value_u8 = 0;
-    uint32_t sdo_value_u32 = 0;
-    if(m_ols_query_extended_code)
-    {
-      // query object 0x2021sub9 (extended code, UINT32) in object dictionary by SDO
-      if(querySDO("2021sub9", sdo_value_u32) && m_ols_query_extended_code)
-      {
-        ROS_INFO_STREAM("sick_line_guidance::CanSubscriber::MeasurementHandler: [2021sub9]=" << sick_line_guidance::MsgUtil::toHexString(sdo_value_u32));
-        boost::lock_guard<boost::mutex> publish_lockguard(m_measurement_mutex);
-        m_ols_state.extended_code = sdo_value_u32;
-      }
-      m_ols_query_extended_code = false;
-    }
-    if(m_ols_query_device_status)
-    {
-      // query object 0x2018 (device status register, UINT8) in object dictionary by SDO
-      if(querySDO("2018", sdo_value_u8) && m_ols_query_device_status)
-      {
-        ROS_INFO_STREAM("sick_line_guidance::CanSubscriber::MeasurementHandler: [2018]=" << sick_line_guidance::MsgUtil::toHexString(sdo_value_u8));
-        boost::lock_guard<boost::mutex> publish_lockguard(m_measurement_mutex);
-        m_ols_state.dev_status = sdo_value_u8;
-      }
-      m_ols_query_device_status = false;
-    }
-    if(m_ols_query_error_register)
-    {
-      // query object 0x1001 (error register, UINT8) in object dictionary by SDO
-      if(querySDO("1001", sdo_value_u8) && m_ols_query_error_register)
-      {
-        ROS_INFO_STREAM("sick_line_guidance::CanSubscriber::MeasurementHandler: [1001]=" << sick_line_guidance::MsgUtil::toHexString(sdo_value_u8));
-        boost::lock_guard<boost::mutex> publish_lockguard(m_measurement_mutex);
-        m_ols_state.error = sdo_value_u8;
-      }
-      m_ols_query_error_register = false;
-    }
+    querySDOifPending<uint32_t, uint32_t>(m_ols_query_extended_code,         "2021sub9", m_ols_state.extended_code,         1);      // OLS: query object 0x2021sub9 (extended code, UINT32) in object dictionary by SDO
+    querySDOifPending<uint8_t,  uint16_t>(m_ols_query_device_status_u8,      "2018",     m_ols_state.dev_status,            1);      // OLS20: query object 0x2018 (device status register, UINT8) in object dictionary by SDO
+    querySDOifPending<uint16_t, uint16_t>(m_ols_query_device_status_u16,     "2018",     m_ols_state.dev_status,            1);      // OLS10: query object 0x2018 (device status register, UINT16) in object dictionary by SDO
+    querySDOifPending<uint8_t,  uint8_t> (m_ols_query_error_register,        "1001",     m_ols_state.error,                 1);      // OLS: query object 0x1001 (error register, UINT8) in object dictionary by SDO
+    querySDOifPending<int16_t,  float>   (m_ols_query_barcode_center_point,  "2021subA", m_ols_state.barcode_center_point,  0.001f); // OLS20 only: query object 2021subA (barcode center point, INT16) in object dictionary by SDO
+    querySDOifPending<uint8_t,  uint8_t> (m_ols_query_quality_of_lines,      "2021subB", m_ols_state.quality_of_lines,      1);      // OLS20 only: query object 2021subB (quality of lines, UINT8) in object dictionary by SDO
+    querySDOifPending<uint8_t,  uint8_t> (m_ols_query_intensity_of_lines[0], "2023sub1", m_ols_state.intensity_of_lines[0], 1);      // OLS20 only: query object 2023sub1 (intensity line 1, UINT8)
+    querySDOifPending<uint8_t,  uint8_t> (m_ols_query_intensity_of_lines[1], "2023sub2", m_ols_state.intensity_of_lines[1], 1);      // OLS20 only: query object 2023sub2 (intensity line 2, UINT8)
+    querySDOifPending<uint8_t,  uint8_t> (m_ols_query_intensity_of_lines[2], "2023sub3", m_ols_state.intensity_of_lines[2], 1);      // OLS20 only: query object 2023sub3 (intensity line 3, UINT8)
+    // Clear all pending status
+    m_ols_query_extended_code.pending() = false;
+    m_ols_query_device_status_u8.pending() = false;
+    m_ols_query_device_status_u16.pending() = false;
+    m_ols_query_error_register.pending() = false;
+    m_ols_query_barcode_center_point.pending() = false;
+    m_ols_query_quality_of_lines.pending() = false;
+    m_ols_query_intensity_of_lines[0].pending() = false;
+    m_ols_query_intensity_of_lines[1].pending() = false;
+    m_ols_query_intensity_of_lines[2].pending() = false;
     m_max_sdo_query_rate.sleep();
   }
 }
@@ -226,7 +212,48 @@ void sick_line_guidance::CanSubscriber::MeasurementHandler::runMeasurementSDOque
 bool sick_line_guidance::CanSubscriber::MeasurementHandler::querySDO(const std::string & can_object_idx, uint8_t & can_object_value)
 {
   std::string can_object_entry = "";
-  return querySDO(can_object_idx, can_object_entry) && convertSDOresponse(can_object_entry, can_object_value);
+  if(querySDO(can_object_idx, can_object_entry) && convertSDOresponse(can_object_entry, can_object_value))
+   return true;
+  ROS_ERROR_STREAM("querySDO(" << can_object_idx << ",uint8_t) failed, value=" << sick_line_guidance::MsgUtil::toHexString(can_object_value) );
+  return false;
+}
+
+/*
+ * @brief queries an object in the object dictionary by SDO and returns its value.
+ * @param[in] can_object_idx object index in object dictionary, f.e. "2018" (OLS device status) or "2021sub9" (OLS extended code)
+ * @param[out] can_object_value object value from SDO response
+ * @return true on success (can_object_value set to objects value), false otherwise (can_object_value not set)
+ */
+bool sick_line_guidance::CanSubscriber::MeasurementHandler::querySDO(const std::string & can_object_idx, int16_t & can_object_value)
+{
+  int32_t value = 0;
+  std::string can_object_entry = "";
+  if(querySDO(can_object_idx, can_object_entry) && convertSDOresponse(can_object_entry, value) && value >= INT16_MIN && value <= INT16_MAX)
+  {
+    can_object_value = (int16_t)value;
+    return true;
+  }
+  ROS_ERROR_STREAM("querySDO(" << can_object_idx << ",int16_t) failed, value=" << sick_line_guidance::MsgUtil::toHexString(can_object_value) );
+  return false;
+}
+
+/*
+ * @brief queries an object in the object dictionary by SDO and returns its value.
+ * @param[in] can_object_idx object index in object dictionary, f.e. "2018" (OLS device status) or "2021sub9" (OLS extended code)
+ * @param[out] can_object_value object value from SDO response
+ * @return true on success (can_object_value set to objects value), false otherwise (can_object_value not set)
+ */
+bool sick_line_guidance::CanSubscriber::MeasurementHandler::querySDO(const std::string & can_object_idx, uint16_t & can_object_value)
+{
+  uint32_t value = 0;
+  std::string can_object_entry = "";
+  if(querySDO(can_object_idx, can_object_entry) && convertSDOresponse(can_object_entry, value) && value <= UINT16_MAX)
+  {
+    can_object_value = (uint16_t)value;
+    return true;
+  }
+  ROS_ERROR_STREAM("querySDO(" << can_object_idx << ",uint16_t) failed, value=" << sick_line_guidance::MsgUtil::toHexString(can_object_value) );
+  return false;
 }
 
 /*
@@ -238,7 +265,10 @@ bool sick_line_guidance::CanSubscriber::MeasurementHandler::querySDO(const std::
 bool sick_line_guidance::CanSubscriber::MeasurementHandler::querySDO(const std::string & can_object_idx, uint32_t & can_object_value)
 {
   std::string can_object_entry = "";
-  return querySDO(can_object_idx, can_object_entry) && convertSDOresponse(can_object_entry, can_object_value);
+  if(querySDO(can_object_idx, can_object_entry) && convertSDOresponse(can_object_entry, can_object_value))
+    return true;
+  ROS_ERROR_STREAM("querySDO(" << can_object_idx << ",uint32_t) failed, value=" << sick_line_guidance::MsgUtil::toHexString(can_object_value) );
+  return false;
 }
 
 /*
@@ -255,7 +285,7 @@ bool sick_line_guidance::CanSubscriber::MeasurementHandler::querySDO(const std::
   if(sdo_success)
   {
     ROS_INFO_STREAM("sick_line_guidance::CanopenChain::queryCanObject(" << m_can_nodeid << "): [" << can_object_idx << "]=" << can_object_value );
-    sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::OK, "SDO");
+    /* sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::OK, "SDO"); */
   }
   else
   {
@@ -324,6 +354,28 @@ bool sick_line_guidance::CanSubscriber::MeasurementHandler::convertSDOresponse(c
 }
 
 /*
+ * @brief converts a sdo response to int32.
+ * Note: std::exception are caught (error message and return false in this case)
+ * @param[in] response sdo response as string
+ * @param[out] value uint32 value converted from SDO response
+ * @return true on success, false otherwise
+ */
+bool sick_line_guidance::CanSubscriber::MeasurementHandler::convertSDOresponse(const std::string & response, int32_t & value)
+{
+  value = 0;
+  try
+  {
+    value = std::stol(response, 0, 0);
+    return true;
+  }
+  catch(const std::exception & exc)
+  {
+    ROS_ERROR_STREAM("convertSDOresponse(" << response << ") to INT32 failed: exception = " << exc.what());
+  }
+  return false;
+}
+
+/*
  * @brief returns true, if publishing of a MLS measurement is scheduled and time has been reached for publishing the current MLS measurement.
  */
 bool sick_line_guidance::CanSubscriber::MeasurementHandler::isMLSMeasurementTriggered(void)
@@ -340,6 +392,27 @@ bool sick_line_guidance::CanSubscriber::MeasurementHandler::isOLSMeasurementTrig
   boost::lock_guard<boost::mutex> schedule_lockguard(m_publish_measurement_mutex);
   return !m_publish_ols_measurement.isZero() && ros::Time::now() > m_publish_ols_measurement;
 }
+
+/*
+ * @brief returns true, if publishing of a measurement is scheduled and latest time for publishing has been reached.
+ */
+bool sick_line_guidance::CanSubscriber::MeasurementHandler::isLatestTimeForMeasurementPublishing(void)
+{
+  boost::lock_guard<boost::mutex> schedule_lockguard(m_publish_measurement_mutex);
+  return !m_publish_measurement_latest.isZero() && ros::Time::now() > m_publish_measurement_latest;
+}
+
+
+/*
+ * @brief returns true, if sdo query is pending, i.e. measurement is not yet completed (sdo request or sdo response still pending)
+ */
+bool sick_line_guidance::CanSubscriber::MeasurementHandler::isSDOQueryPending(void)
+{
+  boost::lock_guard<boost::mutex> schedule_lockguard(m_publish_measurement_mutex);
+  return (m_ols_query_extended_code.pending() || m_ols_query_device_status_u8.pending() || m_ols_query_device_status_u16.pending() || m_ols_query_error_register.pending() || m_ols_query_barcode_center_point.pending()
+    || m_ols_query_quality_of_lines.pending() || m_ols_query_intensity_of_lines[0].pending() || m_ols_query_intensity_of_lines[1].pending() || m_ols_query_intensity_of_lines[2].pending());
+}
+
 /*
  * @brief schedules the publishing of the current MLS measurement message.
  * @param[in] schedule if true, publishing is scheduled, otherwise a possibly pending schedule is removed.
@@ -350,10 +423,12 @@ void sick_line_guidance::CanSubscriber::MeasurementHandler::schedulePublishMLSMe
   if(schedule && m_publish_mls_measurement.isZero()) // otherwise publishing the measurement is already scheduled
   {
     m_publish_mls_measurement = ros::Time::now() + m_schedule_publish_delay;
+    m_publish_measurement_latest = ros::Time::now() + m_max_publish_delay;
   }
   if(!schedule && !m_publish_mls_measurement.isZero()) // remove pending schedule
   {
     m_publish_mls_measurement = ros::Time(0);
+    m_publish_measurement_latest = ros::Time(0);
   }
 }
 
@@ -367,10 +442,12 @@ void sick_line_guidance::CanSubscriber::MeasurementHandler::schedulePublishOLSMe
   if(schedule && m_publish_ols_measurement.isZero()) // otherwise publishing the measurement is already scheduled
   {
     m_publish_ols_measurement = ros::Time::now() + m_schedule_publish_delay;
+    m_publish_measurement_latest = ros::Time::now() + m_max_publish_delay;
   }
   if(!schedule && !m_publish_ols_measurement.isZero()) // remove pending schedule
   {
     m_publish_ols_measurement = ros::Time(0);
+    m_publish_measurement_latest = ros::Time(0);
   }
 }
 

@@ -5,6 +5,7 @@ bus:
 sync:
   interval_ms: 10
   overflow: 0
+#
 # heartbeat: # simple heartbeat producer (optional, not supported by OLS or MLS, do not enable heartbeats)
 #   rate: 100 # heartbeat rate (milliseconds)
 #   msg: "77f#05" # message to send, cansend format: heartbeat of node 127 with status 5=Started

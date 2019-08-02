@@ -1,5 +1,6 @@
 # MLS_Measurement.msg defines a single measurement of a SICK MLS.
 # See operation instructions for details (www.sick.com/mls).
+#
 
 # Header with sequence id, timestamp of the measurement and frame id 
 Header header

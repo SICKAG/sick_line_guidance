@@ -31,4 +31,4 @@ nodes:
     #   "2026":        "1" # Offset [mm] Nullpunkt, INT16, DataType=0x0003, defaultvalue=0
     #   "2027":     "0x01" # sensorFlipped, UINT8, DataType=0x0005, defaultvalue=0
     #   "2029":     "0x01" # LockTeach, UINT8, DataType=0x0005, defaultvalue=0
-
+    #

@@ -47,8 +47,8 @@
  * Authors:
  *         Michael Lehning <michael.lehning@lehning.de>
  *
- *  Copyright 2019 SICK AG
- *  Copyright 2019 Ing.-Buero Dr. Michael Lehning
+ * Copyright 2019 SICK AG
+ * Copyright 2019 Ing.-Buero Dr. Michael Lehning
  * 
  */
 

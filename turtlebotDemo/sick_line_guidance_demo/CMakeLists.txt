@@ -1,28 +1,29 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(sick_line_guidance)
+project(sick_line_guidance_demo)
 
-##
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11 -Wall -Wno-reorder -Wno-sign-compare -Wno-unused-local-typedefs)
+add_compile_options(-std=c++11 -g -Wall -Wno-reorder -Wno-sign-compare -Wno-unused-local-typedefs -Wno-unused-parameter)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   cmake_modules
-  can_msgs 
-  canopen_chain_node
+  sick_line_guidance
   message_generation
   random_numbers
   roscpp
   rospy
   sensor_msgs
   std_msgs
+  nav_msgs
+  sm_timing
 )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 find_package(TinyXML REQUIRED)
+find_package(OpenCV 3 REQUIRED)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -55,11 +56,11 @@ find_package(TinyXML REQUIRED)
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-  MLS_Measurement.msg
-  OLS_Measurement.msg
-)
+# add_message_files(
+#   FILES
+#   Measurement1.msg
+#   Measurement2.msg
+# )
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -76,12 +77,13 @@ add_message_files(
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  sensor_msgs
-  std_msgs
-  can_msgs
-)
+# generate_messages(
+#   DEPENDENCIES
+#   sensor_msgs
+#   std_msgs
+#   nav_msgs
+#   sick_line_guidance
+# )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -112,12 +114,12 @@ generate_messages(
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES sick_line_guidance_lib
-  CATKIN_DEPENDS can_msgs canopen_chain_node message_runtime random_numbers roscpp rospy sensor_msgs std_msgs
-  DEPENDS TinyXML # system_lib
-)
+#catkin_package(
+#  INCLUDE_DIRS include
+#  LIBRARIES sick_line_guidance_demo_lib
+#  CATKIN_DEPENDS sick_line_guidance message_runtime random_numbers roscpp rospy sensor_msgs std_msgs nav_msgs
+#  DEPENDS TinyXML
+#)
 
 ###########
 ## Build ##
@@ -129,22 +131,26 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${TinyXML_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
 add_library(${PROJECT_NAME}_lib
-  src/sick_line_guidance_can_subscriber.cpp
-  src/sick_line_guidance_can_cia401_subscriber.cpp
-  src/sick_line_guidance_can_mls_subscriber.cpp
-  src/sick_line_guidance_can_ols_subscriber.cpp
-  src/sick_line_guidance_canopen_chain.cpp
-  src/sick_line_guidance_cloud_converter.cpp
-  src/sick_line_guidance_diagnostic.cpp
-  src/sick_line_guidance_eds_util.cpp
-  src/sick_line_guidance_msg_util.cpp
-  src/sick_canopen_simu_canstate.cpp
-  src/sick_canopen_simu_device.cpp
-  src/sick_canopen_simu_verify.cpp
+  src/adjust_heading.cpp
+  src/barcodes.cpp
+  src/explore_line_state.cpp
+  src/figure_eight_fsm.cpp
+  src/follow_line_state.cpp
+  src/image_util.cpp
+  src/navigation_mapper.cpp
+  src/navigation_util.cpp
+  src/ols_measurement_simulator.cpp
+  src/pid.cpp
+  src/robot_fsm.cpp
+  src/stop_go_fsm.cpp
+  src/turtlebot_test_fsm.cpp
+  src/velocity_ctr.cpp
+  src/wait_at_barcode_state.cpp
 )
 
 ## Add cmake target dependencies of the library
@@ -155,12 +161,9 @@ add_library(${PROJECT_NAME}_lib
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_node            src/sick_line_guidance_node.cpp)
-add_executable(${PROJECT_NAME}_can_chain_node  src/sick_line_guidance_can_chain_node.cpp)
-add_executable(${PROJECT_NAME}_cloud_publisher src/sick_line_guidance_cloud_publisher.cpp)
-add_executable(${PROJECT_NAME}_can2ros_node    src/sick_line_guidance_can2ros_node.cpp)
-add_executable(${PROJECT_NAME}_ros2can_node    src/sick_line_guidance_ros2can_node.cpp)
-add_executable(sick_canopen_simu_node          src/sick_canopen_simu_node.cpp)
+add_executable(sick_line_guidance_demo_node src/sick_line_guidance_demo_node.cpp)
+add_executable(sick_line_guidance_watchdog src/sick_line_guidance_watchdog.cpp)
+add_executable(turtlebot_test_fsm_node src/turtlebot_test_fsm_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -170,96 +173,60 @@ add_executable(sick_canopen_simu_node          src/sick_canopen_simu_node.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(${PROJECT_NAME}_node
-  random_numbers
-  canopen_ros_chain
-  ${PROJECT_NAME}_lib
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS}
-)
-add_dependencies(${PROJECT_NAME}_can_chain_node
-  canopen_ros_chain
-  ${PROJECT_NAME}_lib
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS}
-)
-add_dependencies(${PROJECT_NAME}_cloud_publisher
-  ${PROJECT_NAME}_lib
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS}
-)
-add_dependencies(${PROJECT_NAME}_can2ros_node
-  canopen_ros_chain
-  ${PROJECT_NAME}_lib
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS}
-)
-add_dependencies(${PROJECT_NAME}_ros2can_node
-  canopen_ros_chain
-  ${PROJECT_NAME}_lib
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS}
-)
 add_dependencies(${PROJECT_NAME}_lib
+  sick_line_guidance_lib
+  random_numbers
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
   ${catkin_EXPORTED_TARGETS}
 )
-add_dependencies(sick_canopen_simu_node
+add_dependencies(sick_line_guidance_demo_node
+  sick_line_guidance_lib
   random_numbers
-  canopen_ros_chain
+  ${PROJECT_NAME}_lib
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+)
+add_dependencies(sick_line_guidance_watchdog
+  sick_line_guidance_lib
+  ${PROJECT_NAME}_lib
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+)
+add_dependencies(turtlebot_test_fsm_node
+  sick_line_guidance_lib
   ${PROJECT_NAME}_lib
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
   ${catkin_EXPORTED_TARGETS}
 )
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}_node
-  canopen_ros_chain
+target_link_libraries(sick_line_guidance_demo_node
   random_numbers
+  sick_line_guidance_lib
   ${PROJECT_NAME}_lib
   ${Boost_LIBRARIES}
   ${catkin_LIBRARIES}
   ${TinyXML_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  profiler
 )
-target_link_libraries(${PROJECT_NAME}_can_chain_node
-  canopen_ros_chain
+target_link_libraries(sick_line_guidance_watchdog
+  sick_line_guidance_lib
   ${PROJECT_NAME}_lib
   ${Boost_LIBRARIES}
   ${catkin_LIBRARIES}
   ${TinyXML_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  profiler
 )
-target_link_libraries(${PROJECT_NAME}_cloud_publisher
+target_link_libraries(turtlebot_test_fsm_node
+  sick_line_guidance_lib
   ${PROJECT_NAME}_lib
   ${Boost_LIBRARIES}
   ${catkin_LIBRARIES}
   ${TinyXML_LIBRARIES}
-)
-target_link_libraries(${PROJECT_NAME}_can2ros_node
-  canopen_ros_chain
-  ${PROJECT_NAME}_lib
-  ${Boost_LIBRARIES}
-  ${catkin_LIBRARIES}
-  ${TinyXML_LIBRARIES}
-)
-target_link_libraries(${PROJECT_NAME}_ros2can_node
-  canopen_ros_chain
-  ${PROJECT_NAME}_lib
-  ${Boost_LIBRARIES}
-  ${catkin_LIBRARIES}
-  ${TinyXML_LIBRARIES}
-)
-target_link_libraries(${PROJECT_NAME}_lib
-  ${Boost_LIBRARIES}
-  ${catkin_LIBRARIES}
-  ${TinyXML_LIBRARIES}
-)
-target_link_libraries(sick_canopen_simu_node
-  canopen_ros_chain
-  random_numbers
-  ${PROJECT_NAME}_lib
-  ${Boost_LIBRARIES}
-  ${catkin_LIBRARIES}
-  ${TinyXML_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  profiler
 )
 
 #############
@@ -277,7 +244,7 @@ target_link_libraries(sick_canopen_simu_node
 # )
 
 ## Mark executables and/or libraries for installation
-install(TARGETS ${PROJECT_NAME}_node ${PROJECT_NAME}_can_chain_node ${PROJECT_NAME}_cloud_publisher ${PROJECT_NAME}_can2ros_node ${PROJECT_NAME}_ros2can_node sick_canopen_simu_node ${PROJECT_NAME}_lib
+install(TARGETS sick_line_guidance_demo_node sick_line_guidance_watchdog turtlebot_test_fsm_node ${PROJECT_NAME}_lib
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -292,18 +259,14 @@ install(DIRECTORY include/${PROJECT_NAME}/
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 install(FILES
-  launch/sick_line_guidance.launch
-  launch/sick_line_guidance_can2ros_node.launch
-  launch/sick_line_guidance_ros2can_node.launch
-  launch/sick_canopen_simu.launch
-  mls/SICK-MLS.eds
-  mls/sick_line_guidance_mls.yaml
-  ols/SICK_OLS10_CO.eds
-  ols/SICK_OLS20.eds
-  ols/SICK_OLS20_CO.eds
-  ols/sick_line_guidance_ols10.yaml
-  ols/sick_line_guidance_ols20.yaml
-  test/cfg/sick_canopen_simu_cfg.xml
+  launch/Robot_FSM_demo.launch
+  launch/sick_line_guidance_demo_node.launch
+  launch/sick_line_guidance_watchdog.launch
+  launch/turtlebot_test_fsm_node.launch
+  maps/cam_intrinsic.xml
+  maps/demo_barcodes.xml
+  maps/demo_map_02.png
+  yaml/sick_line_guidance_demo.yaml
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
@@ -319,12 +282,3 @@ install(FILES
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
-
-
-if( TURTLEBOT_DEMO )
-  add_subdirectory( turtlebotDemo/agc_radar )
-  add_subdirectory( turtlebotDemo/custom_messages )
-  add_subdirectory( turtlebotDemo/gpio_handling )
-  add_subdirectory( turtlebotDemo/lidar_obstacle_detection )
-  add_subdirectory( turtlebotDemo/sick_line_guidance_demo )
-endif( TURTLEBOT_DEMO )

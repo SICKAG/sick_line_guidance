@@ -210,6 +210,11 @@ A software simulation is available for test purposes. This simulation generates 
 the sick_line_guidance driver. By sending specified can frames, the complete processing chain of the ros driver can be verified by comparing the actual measurement messages 
 with the expected results. See https://github.com/SICKAG/sick_line_guidance/tree/master/doc/sick_canopen_simu.md for further details.
 
+## Turtlebot demonstration
+
+A demonstration of SICK line guidance with a TurtleBot robot is included in folder sick_line_guidance/turtlebotDemo. 
+Please see [turtlebotDemo/README.md](turtlebotDemo/README.md) for further details.
+
 ## FAQ
 
 ### "Network is down"

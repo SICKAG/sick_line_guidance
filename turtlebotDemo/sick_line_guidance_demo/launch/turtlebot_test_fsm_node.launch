@@ -1,0 +1,6 @@
+<launch>
+
+  <!-- turtlebot_test_fsm_node: simple turtlebot test, drives a figure of eight -->
+  <node name="turtlebot_test_fsm_node" pkg="sick_line_guidance" type="turtlebot_test_fsm_node" />
+
+</launch>

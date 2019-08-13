@@ -1,0 +1,176 @@
+/*
+ * regression_1d estimates a one-dimensional regresssion (value over time).
+ *
+ * Copyright (C) 2019 Ing.-Buero Dr. Michael Lehning, Hildesheim
+ * Copyright (C) 2019 SICK AG, Waldkirch
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of SICK AG nor the names of its
+ *       contributors may be used to endorse or promote products derived from
+ *       this software without specific prior written permission
+ *     * Neither the name of Ing.-Buero Dr. Michael Lehning nor the names of its
+ *       contributors may be used to endorse or promote products derived from
+ *       this software without specific prior written permission
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ *      Authors:
+ *         Michael Lehning <michael.lehning@lehning.de>
+ *
+ *  Copyright 2019 SICK AG
+ *  Copyright 2019 Ing.-Buero Dr. Michael Lehning
+ *
+ */
+#ifndef __SICK_LINE_GUIDANCE_DEMO_REGRESSION_1D_H_INCLUDED
+#define __SICK_LINE_GUIDANCE_DEMO_REGRESSION_1D_H_INCLUDED
+
+namespace sick_line_guidance_demo
+{
+  
+  /*
+   * class Regression1D implements a one-dimensional regression over a fixed number of data points.
+   */
+  class Regression1D
+  {
+  public:
+
+    /*
+     * Constructor
+     * @param[in] n: number of data points
+     */
+    Regression1D(int n = 0) : m_solved(false), m_data_cnt(0)
+    {
+      if(n > 0)
+      {
+        m_left_mat = cv::Mat(n, 2, CV_64F);
+        m_right_mat = cv::Mat(n, 1, CV_64F);
+        m_solved_mat = cv::Mat(2, 1, CV_64F);
+        clear();
+      }
+    }
+  
+    /*
+     * Updates a value over time and performs a new regression.
+     */
+    inline void update(double value, double time = ros::Time::now().toSec())
+    {
+      if(!m_left_mat.empty() && !m_right_mat.empty() && !m_solved_mat.empty())
+      {
+        assert(m_left_mat.cols == 2);
+        assert(m_right_mat.cols == 1);
+        assert(m_solved_mat.cols == 1);
+        assert(m_solved_mat.rows == 2);
+        assert(m_left_mat.rows == m_right_mat.rows);
+        // Move all rows one up
+        for(size_t y = 1; y < m_left_mat.rows; y++)
+          m_left_mat.at<double>(y - 1, 0) = m_left_mat.at<double>(y,0);
+        for(size_t y = 1; y < m_right_mat.rows; y++)
+          m_right_mat.at<double>(y - 1, 0) = m_right_mat.at<double>(y,0);
+        // Copy the new data to the last row
+        m_left_mat.at<double>(m_left_mat.rows - 1, 0) = time;
+        m_right_mat.at<double>(m_right_mat.rows - 1, 0) = value;
+        // Compute regression by solving m_left_mat * m_solved_mat = m_right_mat,
+        // where m_solved_mat contains the regression coefficients
+        m_data_cnt++;
+        if(m_data_cnt >= m_left_mat.rows && m_data_cnt >= m_right_mat.rows)
+        {
+          cv::Mat left_work;
+          cv::Mat right_work;
+          m_left_mat.copyTo(left_work);
+          m_right_mat.copyTo(right_work);
+          m_solved = cv::solve(left_work, right_work, m_solved_mat, cv::DECOMP_SVD);
+        }
+      }
+    }
+  
+    /*
+     * Returns offset and deviation of the regression line.
+     */
+    inline bool getRegression(double & offset, double & deviation)
+    {
+      if(m_solved && !m_solved_mat.empty())
+      {
+        assert(m_solved_mat.cols == 1);
+        assert(m_solved_mat.rows == 2);
+        offset = m_solved_mat.at<double>(1,0);
+        deviation = m_solved_mat.at<double>(0,0);
+      }
+      else
+      {
+        offset = 0;
+        deviation = 0;
+      }
+      return m_solved;
+    }
+
+    /*
+     * Returns the deviation part of the regression.
+     */
+    inline double getDeviation(void)
+    {
+      return (m_solved && !m_solved_mat.empty()) ? (m_solved_mat.at<double>(0,0)) : 0;
+    }
+
+    /*
+     * Clears all values.
+     */
+    inline void clear(void)
+    {
+      m_solved = false;
+      m_data_cnt = 0;
+      m_left_mat = 0;
+      m_right_mat = 0;
+      m_solved_mat = 0;
+      for(size_t y = 0; y < m_left_mat.rows; y++)
+      {
+        m_left_mat.at<double>(y,1) = 1;
+      }
+    }
+  
+  protected:
+  
+    /*
+     * member data
+     */
+    bool m_solved;
+    size_t m_data_cnt;
+    cv::Mat m_left_mat;
+    cv::Mat m_right_mat;
+    cv::Mat m_solved_mat;
+    
+  }; // class Regression1D
+  
+} // namespace sick_line_guidance_demo
+#endif // __SICK_LINE_GUIDANCE_DEMO_REGRESSION_1D_H_INCLUDED
+

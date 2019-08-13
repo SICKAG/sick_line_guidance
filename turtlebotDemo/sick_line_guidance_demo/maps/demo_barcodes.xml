@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<sick_line_guidance_demo>
+  <barcodes> <!-- list of barcodes with label and position in world coordinates (meter) -->
+    <barcode label="0101" outer_pos_x1="+0.318" outer_pos_y1="-0.0275" outer_pos_x2="+0.379" outer_pos_y2="+0.0275" inner_pos_x1="+0.318" inner_pos_y1="-0.0105" inner_pos_x2="+0.379" inner_pos_y2="+0.0245" flipped="false" />
+    <barcode label="0102" outer_pos_x1="-0.252" outer_pos_y1="-0.0275" outer_pos_x2="-0.191" outer_pos_y2="+0.0275" inner_pos_x1="-0.252" inner_pos_y1="-0.0105" inner_pos_x2="-0.191" inner_pos_y2="+0.0245" flipped="true" />
+  </barcodes>
+</sick_line_guidance_demo>

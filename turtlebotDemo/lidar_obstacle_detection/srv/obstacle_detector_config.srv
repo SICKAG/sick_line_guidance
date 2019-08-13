@@ -1,0 +1,6 @@
+float32 range_min
+float32 range_max
+int16 angle_min
+int16 angle_max
+float32 obstacle_stop_range
+---

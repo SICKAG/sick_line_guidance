@@ -1,0 +1,42 @@
+#
+# Configuration file for sick_line_guidance_demo
+#
+
+# Configuration of PID controller
+pid_controller:
+  kp: 30
+  ki: 0
+  kd: 0
+  setpoint: 0.016
+
+# Configuration of follow line state
+follow_line_state:
+  followLineRate: 20                           # frequency to update follow line state, default 20 Hz
+  followSpeed: 0.04                            # default linear velocity to follow a line
+  noLineTime: 5                                # time in seconds before switching to state explore line because of lost line
+  sensorLineWidth: 0.029                       # measured line width at 0 degree, 29 mm for an OLS mounted 65 mm over ground, 20 mm for an OLS mounted 100 mm over ground
+  sensorLineMeasurementJitter: 0.003           # tolerate some line measurement jitter when adjusting the heading
+  adjustHeadingAngularZ: 0.07854               # 0.07854 = 0.1 * M_PI / 4 # velocity.angular.z to adjust robots heading
+  adjustHeadingLcpDeviationThresh: 0.04        # start to adjust heading, if the line distance increases over time (deviation of 1D-regression of line center points is above threshold lcpDeviationThresh)
+  adjustHeadingLcpThresh: 0.04                 # start to adjust heading, if the line distance in meter (abs value) is above this threshold
+  adjustHeadingDeltaAngleEpsilon: 0.001745     # 0.001745 = 0.1 * M_PI / 180; # search stops, if the difference between current and desired yaw angle is smaller than delta_angle_epsilon
+  adjustHeadingMinDistanceToLastAdjust: 0.01   # move at least some cm before doing next heading adjustment
+  olsMessageTimeout: 0.5                       # timeout for ols messages, robot stops and waits, if last ols message was received more than <timeout> seconds ago
+  odomMessageTimeout: 0.5                      # timeout for odom messages, robot stops and waits, if last ols message was received more than <timeout> seconds ago
+
+# Configuration of explore line state
+explore_line_state:
+  exploreLineRate: 20                          # frequency to update explore line state, default 20 Hz
+  exploreSpeed: 0.04                           # default linear velocity to explore a line
+  olsMessageTimeout: 0.5                       # timeout for ols messages, robot stops and waits, if last ols message was received more than <timeout> seconds ago
+  odomMessageTimeout: 0.5                      # timeout for odom messages, robot stops and waits, if last ols message was received more than <timeout> seconds ago
+
+# Configuration of wait at barcode state
+wait_at_barcode_state:
+  stopWaitSeconds: 10                          # time in seconds to stop at a barcode
+
+# Configuration of error simulation (test only)
+error_simulation:
+  burst_no_line_duration: 0.0                  # 1.0 # error simulation (test only), duration of "no line detected" bursts in seconds, default 0.0 (disabled)
+  burst_no_line_frequency: 0.0                 # 0.1 # error simulation (test only), frequency of "no line detected" bursts in 1/seconds, default 0.0 (disabled)
+

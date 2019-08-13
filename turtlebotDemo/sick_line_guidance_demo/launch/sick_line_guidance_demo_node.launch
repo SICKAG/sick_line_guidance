@@ -1,0 +1,22 @@
+<launch>
+
+  <!-- sick_line_guidance_demo: run sick_line_guidance_demo_node, which simulates sick_line_guidance_demo -->
+  <arg name="ols_simu"/>
+  <arg name="visualize"/>
+  <rosparam command="load" file="$(find sick_line_guidance)/sick_line_guidance_demo.yaml"/>
+  <node name="sick_line_guidance_demo_node" pkg="sick_line_guidance" type="sick_line_guidance_demo_node" >
+    <param name="ols_simu" type="int" value="$(arg ols_simu)" />                                               <!-- simulate ols measurement messages -->
+    <param name="visualize" type="int" value="$(arg visualize)" />                                             <!-- visualize==2: visualization+video enabled, map and navigation plots are displayed in a window, visualize==1: video created but not displayed, visualize==0: visualization and video disabled. -->
+    <param name="ros_topic_odometry" type="str" value="/odom" />                                               <!-- ROS topic for odometry incl. robot positions (input) -->
+    <param name="ros_topic_ols_messages" type="str" value="/ols" />                                            <!-- ROS topic for OLS_Measurement messages (simulation: input+output, otherwise input) -->
+    <param name="ros_topic_cmd_vel" type="str" value="/cmd_vel" />                                             <!-- ROS topic for cmd_vel messages (ouput) -->
+    <param name="navigation_map_file" type="str" value="$(find sick_line_guidance)/demo_map_02.png" />         <!-- Navigation map (input) -->
+    <param name="intrinsics_xml_file" type="str" value="$(find sick_line_guidance)/cam_intrinsic.xml" />       <!-- Intrinsics parameter to transform position from navigation map (pixel) to real world (meter) and vice versa (input, cx=cy=660, fx=fy=1) -->
+    <param name="barcodes_xml_file" type="str" value="$(find sick_line_guidance)/demo_barcodes.xml" />         <!-- List of barcodes with label and position (input) -->
+    <param name="line_sensor_detection_width" type="double" value="0.130" />                                   <!-- Default: 0.130, Width of the detection area of the line sensor (meter) -->
+    <param name="line_sensor_scaling_dist" type="double" value="1.35" />                                       <!-- Default: 180.0/133.0, Scaling between physical distance to the line center and measured line center point (measurement: lcp = 180 mm, physical: lcp = 133 mm), depending on mounted sensor height -->
+    <param name="line_sensor_scaling_width" type="double" value="1.45" />                                      <!-- Default: 29.0/20.0, Scaling between physical line width (20 mm) and measured line width (29 mm) depending on mounted sensor height (sensor mounted 100 mm over ground: scaling = 1, sensor mounted 65 mm over ground: scaling = 100/65 = 1.5) -->
+    <param name="line_sensor_mounted_right_to_left" type="bool" value="true" />                                <!-- Sensor mounted from right to left (true, demo robot configuration) or otherwise from left to right -->
+  </node>
+
+</launch>

@@ -1,0 +1,13 @@
+<launch>
+
+  <!-- sick_line_guidance_demo: run sick_line_guidance_watchdog, to monitor ols messages for missing lines and barcode and to run an emergency script to stop the TurtleBot after watchdog timeout -->
+  <node name="sick_line_guidance_watchdog" pkg="sick_line_guidance" type="sick_line_guidance_watchdog" >
+    <param name="ols_topic" type="str" value="/ols" />                              <!-- ROS topic for OLS_Measurement messages -->
+    <param name="odom_topic" type="str" value="/odom" />                            <!-- ROS topic for odometry messages -->
+    <param name="watchdog_timeout" type="double" value="1.0" />                     <!-- watchdog timeout in seconds -->
+    <param name="watchdog_check_frequency" type="double" value="10" />              <!-- rate to check OLS messages -->
+    <param name="barcode_height" type="double" value="0.055" />                     <!-- height of barcode (55 mm, area without valid ols line) -->
+    <param name="watchdog_command" type="str" value="rosnode kill fsm ; sleep 0.5 ; rostopic pub --once /cmd_vel geometry_msgs/Twist '{linear:  {x: 0.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0,z: 0.0}}' ; sleep 0.5 ; nohup rosnode kill -a" /> <!-- watchdog command, executed in case of watchdog timeouts -->
+  </node>
+
+</launch>

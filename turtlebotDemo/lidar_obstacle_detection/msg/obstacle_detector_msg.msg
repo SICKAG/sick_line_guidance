@@ -1,0 +1,8 @@
+Header header
+bool obsctacle_stop
+float32 obstacle_stop_range
+int16 angle_min
+int16 angle_max
+float32 range_min
+float32 range_max
+float32 object_distance_min

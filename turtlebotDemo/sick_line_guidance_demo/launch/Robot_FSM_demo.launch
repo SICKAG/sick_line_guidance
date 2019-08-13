@@ -1,0 +1,11 @@
+<launch>
+    <rosparam command="load" file="$(find iam)/AGC.yaml"/>
+    <!-- include file="$(find turtlebot3_bringup)/launch/turtlebot3_robot.launch"/ -->
+    <!-- include file="$(find sick_line_guidance)/sick_line_guidance.launch"/>
+    <arg name="yaml" value="sick_line_guidance_ols20.yaml"/>
+    </include -->
+    <!-- node pkg="agc_radar" type="agc_radar" name="agc_radar"/ -->
+    <!-- node pkg="lidar_obstacle_detection" type="obstacle_detector" name="obstacle_detector" output="screen"/ -->
+    <!-- node pkg="iam" type="robot_fsm" name="fsm" output="screen" launch-prefix="xterm -fa 'Monospace' -fs 11 -e gdb -ex run - - args" / -->
+    <node pkg="iam" type="robot_fsm" name="fsm" output="screen"/>
+</launch>

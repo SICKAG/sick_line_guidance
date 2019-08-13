@@ -9,6 +9,6 @@ gedit ./run.bash ./runsimu.bash ../../../sick_line_guidance/launch/sick_canopen_
 
 # start clion
 pushd ../../../sick_line_guidance
-/home/hhoss/Public/clion-2018.3.3/bin/clion.sh &
+~/Public/clion-2018.3.3/bin/clion.sh &
 popd
 

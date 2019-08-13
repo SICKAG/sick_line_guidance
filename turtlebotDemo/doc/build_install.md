@@ -1,4 +1,4 @@
-# Build and install sick_line_guidance_demo
+# Build and install TurtleBot demonstration (sick_line_guidance_demo)
 
 ## Prerequisites
 
@@ -13,7 +13,7 @@ sudo apt-get install ros-melodic-gazebo-ros-pkgs ros-melodic-gazebo-ros-control
 
 ## Build and install
 
-To build and install sick_line_guidance_demo, run the following commands:
+To build and install the TurtleBot demonstration (sick_line_guidance_demo), run the following commands:
 
 ```console
 cd ~/catkin_ws/src

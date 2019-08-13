@@ -71,7 +71,7 @@ ls /media/usbstick
 rostest@ROS-NB: 
 mkdir -p ~/tmp
 cd ~/tmp
-scp -r turtlebot@192.168.178.45:/home/turtlebot/.ros/log scp -r turtlebot@192.168.178.45:/home/turtlebot/catkin_ws/src/sick_line_guidance_demo/test/scripts/log .
+scp -r turtlebot@192.168.178.45:/home/turtlebot/.ros/log scp -r turtlebot@192.168.178.45:/home/turtlebot/catkin_ws/src/sick_line_guidance/turtlebotDemo/test/scripts/log .
 # scp -r turtlebot@192.168.178.45:/home/turtlebot/.ros/log .
 # scp -r turtlebot@192.168.178.45:/home/turtlebot/catkin_ws/src/sick_line_guidance_demo/test/scripts/log .
 ```

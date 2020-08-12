@@ -3,7 +3,7 @@ project(sick_line_guidance)
 
 ##
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11 -Wall -Wno-reorder -Wno-sign-compare -Wno-unused-local-typedefs)
+add_compile_options(-std=c++11 -g -Wall -Wno-reorder -Wno-sign-compare -Wno-unused-local-typedefs)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)

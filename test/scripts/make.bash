@@ -12,7 +12,7 @@ source ./install/setup.bash
 
 # lint, install by running
 # sudo apt-get install python-catkin-lint
-catkin_lint -W1 src/sick_line_guidance
+# catkin_lint -W1 src/sick_line_guidance
 
 # print warnings and errors
 echo -e "\nmake.bash finished.\n"

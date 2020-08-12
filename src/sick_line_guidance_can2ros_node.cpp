@@ -212,7 +212,7 @@ int main(int argc, char** argv)
   {
     ROS_INFO("sick_line_guidance_can2ros_node: initializing SocketCANInterface...");
     p_socketcan_interface =  driver_loader.createInstance("can::SocketCANInterface");
-    if(!p_socketcan_interface->init(can_device, false))
+    if(!p_socketcan_interface->init(can_device, false, can::NoSettings::create()))
       ROS_ERROR("sick_line_guidance_can2ros_node: SocketCANInterface::init() failed.");
     ROS_INFO("sick_line_guidance_can2ros_node: initializing socketcan listener ...");
     if(!socketcan_listener.init(nh, ros_topic, p_socketcan_interface, true))

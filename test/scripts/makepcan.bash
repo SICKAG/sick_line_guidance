@@ -11,8 +11,8 @@ fi
 
 # build and install peak can device driver
 
-if [ -d ../../../../../peak_systems/peak-linux-driver-8.7.0 ] ; then
-  pushd ../../../../../peak_systems/peak-linux-driver-8.7.0
+if [ -d ../../../../../peak_systems/peak-linux-driver-8.17.0 ] ; then
+  pushd ../../../../../peak_systems/peak-linux-driver-8.17.0
   # install required packages
   sudo apt-get install can-utils
   sudo apt-get install gcc-multilib

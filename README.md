@@ -44,7 +44,7 @@ instructions on [doc/pcan-linux-installation.md](doc/pcan-linux-installation.md)
 Run the following script to install sick_line_guidance including all dependancies and packages required:
 
 ```bash
-source /opt/ros/melodic/setup.bash # currently ros distro melodic is supported
+source /opt/ros/noetic/setup.bash # currently ros distro melodic and noetic are supported
 cd ~ # or change to your project path
 mkdir -p catkin_ws/src/
 cd catkin_ws/src/

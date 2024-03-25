@@ -100,11 +100,15 @@ int main(int argc, char** argv)
   bool can_connect_init_at_startup = true; // Connect and initialize canopen service
   int initial_sensor_state = 0x07; // initial sensor state (f.e. 0x07 for 3 detected lines, or 8 to indicate sensor error)
   int subscribe_queue_size = 16;   // buffer size for ros messages
+  int max_num_retries_after_sdo_error = 2; // After SDO error, the query is repeated max. N times (default: N=2). If the SDO error persists, the can driver is shutdown and restarted.
+  double max_sdo_rate = 1000; // max_sdo_rate max. sdo query and publish rate
   std::string diagnostic_topic = "diagnostics";
   nh.param("/sick_line_guidance_node/can_connect_init_at_startup", can_connect_init_at_startup, can_connect_init_at_startup); // Connect and initialize canopen service at startup
   nh.param("/sick_line_guidance_node/initial_sensor_state", initial_sensor_state, initial_sensor_state); // initial sensor state
   nh.param("/sick_line_guidance_node/subscribe_queue_size", subscribe_queue_size, subscribe_queue_size);
   nh.param("/sick_line_guidance_node/diagnostic_topic", diagnostic_topic, diagnostic_topic);
+  nh.param("/sick_line_guidance_node/max_num_retries_after_sdo_error", max_num_retries_after_sdo_error, max_num_retries_after_sdo_error);
+  nh.param("/sick_line_guidance_node/max_sdo_rate", max_sdo_rate, max_sdo_rate);
   ROS_INFO_STREAM("sick_line_guidance_node: version " << sick_line_guidance::Version::getVersionInfo());
   sick_line_guidance::Diagnostic::init(nh, diagnostic_topic, "sick_line_guidance_node");
   if(can_connect_init_at_startup)
@@ -140,7 +144,7 @@ int main(int argc, char** argv)
     std::vector <std::string> vec_object_idx = {"1001", "1018sub1", "1018sub4"};
     for (std::vector<std::string>::iterator object_iter = vec_object_idx.begin(); object_iter != vec_object_idx.end(); object_iter++)
     {
-      if (!sick_line_guidance::CanopenChain::queryCanObject(nh, can_node_id, *object_iter, can_msg, can_object_value))
+      if (!sick_line_guidance::CanopenChain::queryCanObject(nh, can_node_id, *object_iter, max_num_retries_after_sdo_error, can_msg, can_object_value))
         ROS_ERROR("sick_line_guidance_node: CanopenChain::queryCanObject(%s, %s) failed: %s", can_node_id.c_str(), object_iter->c_str(), can_msg.c_str());
       else
         ROS_INFO("sick_line_guidance_node: can %s[%s]=%s", can_node_id.c_str(), object_iter->c_str(), can_object_value.c_str());
@@ -181,13 +185,13 @@ int main(int argc, char** argv)
     sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::OK, "");
     sick_line_guidance::CanSubscriber * p_can_subscriber = NULL;
     if (sick_device_family == "MLS")
-      p_can_subscriber = new sick_line_guidance::CanMlsSubscriber(nh, can_node_id, sick_topic, sick_frame_id, initial_sensor_state, subscribe_queue_size);
+      p_can_subscriber = new sick_line_guidance::CanMlsSubscriber(nh, can_node_id, max_num_retries_after_sdo_error, max_sdo_rate, sick_topic, sick_frame_id, initial_sensor_state, subscribe_queue_size);
     else if (sick_device_family == "OLS10")
-      p_can_subscriber = new sick_line_guidance::CanOls10Subscriber(nh, can_node_id, sick_topic, sick_frame_id, initial_sensor_state, subscribe_queue_size);
+      p_can_subscriber = new sick_line_guidance::CanOls10Subscriber(nh, can_node_id, max_num_retries_after_sdo_error, max_sdo_rate, sick_topic, sick_frame_id, initial_sensor_state, subscribe_queue_size);
     else if (sick_device_family == "OLS20")
-      p_can_subscriber = new sick_line_guidance::CanOls20Subscriber(nh, can_node_id, sick_topic, sick_frame_id, initial_sensor_state, subscribe_queue_size);
+      p_can_subscriber = new sick_line_guidance::CanOls20Subscriber(nh, can_node_id, max_num_retries_after_sdo_error, max_sdo_rate, sick_topic, sick_frame_id, initial_sensor_state, subscribe_queue_size);
     else if (sick_device_family == "CIA401")
-      p_can_subscriber = new sick_line_guidance::CanCiA401Subscriber(nh, can_node_id, sick_topic, sick_frame_id, initial_sensor_state, subscribe_queue_size);
+      p_can_subscriber = new sick_line_guidance::CanCiA401Subscriber(nh, can_node_id, max_num_retries_after_sdo_error, max_sdo_rate, sick_topic, sick_frame_id, initial_sensor_state, subscribe_queue_size);
     if(p_can_subscriber && p_can_subscriber->subscribeCanTopics())
     {
       vecCanSubscriber.push_back(p_can_subscriber);

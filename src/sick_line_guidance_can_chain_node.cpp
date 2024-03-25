@@ -54,6 +54,7 @@
  */
 #include <ros/ros.h>
 #include <ros/console.h>
+#include <console_bridge/console.h>
 #include <log4cxx/logger.h>
 #include "sick_line_guidance/sick_line_guidance_version.h"
 #include "sick_line_guidance/sick_line_guidance_canopen_chain.h"
@@ -64,6 +65,7 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "sick_line_guidance_can_chain_node");
   // log4cxx::LoggerPtr node_logger = log4cxx::Logger::getLogger(ROSCONSOLE_DEFAULT_NAME);
   // node_logger->setLevel(ros::console::g_level_lookup[ros::console::levels::Debug]);
+  // console_bridge::setLogLevel(console_bridge::CONSOLE_BRIDGE_LOG_DEBUG);
 
   ros::NodeHandle nh;
   ros::NodeHandle nh_priv("~");

@@ -175,7 +175,7 @@ bool sick_line_guidance::CanopenChain::writeDCFoverlays(ros::NodeHandle &nh, con
       sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::SDO_COMMUNICATION_ERROR, "writeDCFoverlays failed");
     }
     // Re-read value in object dictionary
-    if(!queryCanObject(nh, node_id, dcf_overlay_object_index, sdo_message, sdo_response))
+    if(!queryCanObject(nh, node_id, dcf_overlay_object_index, 0, sdo_message, sdo_response))
     {
       dcf_success = false;
       ROS_ERROR_STREAM("sick_line_guidance::CanopenChain::writeDCFoverlays(): queryCanObject(" << node_id << "," << dcf_overlay_object_index
@@ -218,16 +218,16 @@ bool sick_line_guidance::CanopenChain::writeDCFoverlays(ros::NodeHandle &nh, con
  * @param[in] nh ros::NodeHandle
  * @param[in] node_id can node id of the can device
  * @param[in] object index in the object dictonary of the can device, f.e. "1001sub", "1018sub4"
+ * @param[in] max_num_retries_after_sdo_error After SDO error, the query is repeated max. N times (default: N=2). If the SDO error persists, the can driver is shutdown and restarted.
  * @param[out] output_message informational message in case of errors (responce from canopen service)
  * @param[out] output_value value of the object (responce from canopen service)
  *
  * @return true, if query successful, otherwise false.
  */
 bool sick_line_guidance::CanopenChain::queryCanObject(ros::NodeHandle &nh,
-  const std::string & node_id, const std::string & objectidx,
+  const std::string & node_id, const std::string & objectidx, int max_num_retries_after_sdo_error,
   std::string & output_message, std::string & output_value)
 {
-  int max_num_retries_after_sdo_error = 2; // After SDO error, the query is repeated max. 2 times. If the SDO error persists, the can driver is shutdown and restarted. TODO: from config
   bool sdo_success = false;
   for(int retry_cnt = 0; sdo_success == false; retry_cnt++)
   {
@@ -262,23 +262,23 @@ bool sick_line_guidance::CanopenChain::queryCanObject(ros::NodeHandle &nh,
     }
     if(!sdo_success)
     {
-      // SDO failed, reset communication ("driver/recover")
-      // ROS_ERROR_STREAM("sick_line_guidance::CanopenChain::queryCanObject(\" << node_id << \"): resetting can communication after SDO error");
-      // if(recoverCanDriver(nh))
-      //   ROS_INFO_STREAM("sick_line_guidance::CanopenChain::queryCanObject(\" << node_id << \"): recoverCanDriver() successfull.");
-      // else
-      //   ROS_ERROR_STREAM("sick_line_guidance::CanopenChain::queryCanObject(\" << node_id << \"): recoverCanDriver() failed.");
-      // SDO failed, shutdown communication ("driver/shutdown") and re-initialize ("driver/init")
-      ROS_ERROR_STREAM("sick_line_guidance::CanopenChain::queryCanObject(" << node_id << "): shutdown and re-init can communication after SDO error");
+      // SDO failed
       sick_line_guidance::Diagnostic::update(sick_line_guidance::DIAGNOSTIC_STATUS::SDO_COMMUNICATION_ERROR, "CanopenChain::queryCanObject failed");
-      if (retry_cnt <= max_num_retries_after_sdo_error)
+      if (retry_cnt < max_num_retries_after_sdo_error)
       {
-        ROS_ERROR_STREAM("sick_line_guidance::CanopenChain::queryCanObject(" << node_id << "): SDO error, retrying...");
+        ROS_ERROR_STREAM("sick_line_guidance::CanopenChain::queryCanObject(" << node_id << ") failed: SDO error, retrying...");
         continue;
       }
       else
       {
-        ROS_ERROR_STREAM("sick_line_guidance::CanopenChain::queryCanObject(" << node_id << "): unrecoverable SDO error, retries not successful, giving up, initiating can driver shutdown and restart");
+        // SDO failed, reset communication ("driver/recover")
+        // ROS_ERROR_STREAM("sick_line_guidance::CanopenChain::queryCanObject(\" << node_id << \"): resetting can communication after SDO error");
+        // if(recoverCanDriver(nh))
+        //   ROS_INFO_STREAM("sick_line_guidance::CanopenChain::queryCanObject(\" << node_id << \"): recoverCanDriver() successfull.");
+        // else
+        //   ROS_ERROR_STREAM("sick_line_guidance::CanopenChain::queryCanObject(\" << node_id << \"): recoverCanDriver() failed.");
+        // SDO failed, shutdown communication ("driver/shutdown") and re-initialize ("driver/init")
+        ROS_ERROR_STREAM("sick_line_guidance::CanopenChain::queryCanObject(" << node_id << "): unrecoverable SDO error, retries not successful, giving up, initiating can driver shutdown and restart after SDO error");
         if(shutdownCanDriver(nh))
           ROS_INFO_STREAM("sick_line_guidance::CanopenChain::queryCanObject(" << node_id << "): shutdownCanDriver() successfull.");
         else

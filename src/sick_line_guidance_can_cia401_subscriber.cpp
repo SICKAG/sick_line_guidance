@@ -60,14 +60,16 @@
  * Constructor.
  * @param[in] nh ros::NodeHandle
  * @param[in] can_nodeid can id for canopen_chain_node, f.e. "node1"
+ * @param[in] max_num_retries_after_sdo_error After SDO error, the query is repeated max. N times (default: N=2). If the SDO error persists, the can driver is shutdown and restarted.
+ * @param[in] max_sdo_rate max. sdo query and publish rate
  * @param[in] ros_topic topic for ros messages, f.e. "mls" or "ols"
  * @param[in] ros_frameid frameid for ros messages, f.e. "mls_measurement_frame" or "ols_measurement_frame"
  * @param[in] initial_sensor_state initial sensor state (f.e. 0x07 for 3 detected lines, or (1 << 4) to indicate sensor error)
  * @param[in] subscribe_queue_size buffer size for ros messages
  */
-sick_line_guidance::CanCiA401Subscriber::CanCiA401Subscriber(ros::NodeHandle & nh, const std::string & can_nodeid,
+sick_line_guidance::CanCiA401Subscriber::CanCiA401Subscriber(ros::NodeHandle & nh, const std::string & can_nodeid, int max_num_retries_after_sdo_error, double max_sdo_rate,
   const std::string & ros_topic, const std::string & ros_frameid, int initial_sensor_state, int subscribe_queue_size)
-  : sick_line_guidance::CanOlsSubscriber::CanOlsSubscriber(nh, can_nodeid, ros_topic, ros_frameid, initial_sensor_state, subscribe_queue_size)
+  : sick_line_guidance::CanOlsSubscriber::CanOlsSubscriber(nh, can_nodeid, max_num_retries_after_sdo_error, max_sdo_rate, ros_topic, ros_frameid, initial_sensor_state, subscribe_queue_size)
 {
 }
 

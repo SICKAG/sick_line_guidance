@@ -44,7 +44,7 @@ instructions on [doc/pcan-linux-installation.md](doc/pcan-linux-installation.md)
 Run the following script to install sick_line_guidance including all dependancies and packages required:
 
 ```bash
-source /opt/ros/melodic/setup.bash # currently ros distro melodic is supported
+source /opt/ros/noetic/setup.bash # currently ros distro melodic and noetic are supported
 cd ~ # or change to your project path
 mkdir -p catkin_ws/src/
 cd catkin_ws/src/
@@ -297,3 +297,18 @@ killall rosmaster  # kill ros core
 ```
 
 Please note, that this kills all ros processes, not just those required for sick_line_guidance.
+
+### "Debugging"
+
+:question: Question: How can I run sick_line_guidance or ros_canopen in a debugger, e.g. gdb
+
+:white_check_mark: Answer: A ros node can be started in gdb with prefix gdb, e.g.
+
+```bash
+rosrun --prefix 'gdb -ex run --args' sick_line_guidance ...
+```
+
+or with argument `launch-prefix="gdb -ex run - -args"` in the launchfile, e.g.
+```
+<node name="sick_line_guidance_can_chain_node" pkg="sick_line_guidance" type="sick_line_guidance_can_chain_node" launch-prefix="gdb -ex run - -args" output="screen" >
+```

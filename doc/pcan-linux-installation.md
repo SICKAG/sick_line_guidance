@@ -15,11 +15,12 @@ sudo dpkg --install pcanview-ncurses_0.8.7-0_amd64.deb
 
 &nbsp; 2. If you're running ROS in a virtual machine, make sure the usb-port for the PCAN-USB-adapter is connected to your VM. 
 
-&nbsp; 3. Download and unzip peak-linux-driver-8.7.0.tar.gz from https://www.peak-system.com/linux/ or https://www.peak-system.com/fileadmin/media/linux/files/peak-linux-driver-8.7.0.tar.gz
+&nbsp; 3. Download and unzip peak-linux-driver-8.17.0.tar.gz from https://www.peak-system.com/quick/PCAN-Linux-Driver
+
 
 &nbsp; 4. Install the linux driver and required packages:
 ```bash
-cd peak-linux-driver-8.7.0
+cd peak-linux-driver-8.17.0
 # install required packages
 sudo apt-get install can-utils
 sudo apt-get install gcc-multilib
@@ -46,18 +47,17 @@ ip -details link show can0  # should print some details about "can0" net device
 ```
 Example output after successfull installation of a pcan usb adapter:
 ```bash
-user@ubuntu-ros:~/peak-linux-driver-8.7.0$ ./driver/lspcan --all
-pcan version: 8.7.0
-pcanusb32	CAN1CAN1	8MHz	500k	CLOSED	-	0	0	0
-user@ubuntu-ros:~/peak-linux-driver-8.7.0$ tree /dev/pcan-usb
+user@ubuntu-ros:~/peak-linux-driver-8.17.0$ ./driver/lspcan --all
+pcanusb32	CAN1	-	8MHz	125k	ACTIVE	-	1969	0	0
+user@ubuntu-ros:~/peak-linux-driver-8.17.0$ tree /dev/pcan-usb
 /dev/pcan-usb
 ├── 0
 │   └── can0 -> ../../pcanusb32
 └── devid=5 -> ../pcanusb32
-user@ubuntu-ros:~/peak-linux-driver-8.7.0$ ip -a link
+user@ubuntu-ros:~/peak-linux-driver-8.17.0$ ip -a link
 3: can0: <NOARP> mtu 16 qdisc noop state DOWN mode DEFAULT group default qlen 10
     link/can 
-user@ubuntu-ros:~/peak-linux-driver-8.7.0$ ip -details link show can0
+user@ubuntu-ros:~/peak-linux-driver-8.17.0$ ip -details link show can0
 3: can0: <NOARP> mtu 16 qdisc noop state DOWN mode DEFAULT group default qlen 10
     link/can  promiscuity 0 
     can state STOPPED restart-ms 0 

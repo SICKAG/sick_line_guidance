@@ -126,12 +126,13 @@ namespace sick_line_guidance
      * @param[in] nh ros::NodeHandle
      * @param[in] node_id can node id of the can device
      * @param[in] object index in the object dictonary of the can device, f.e. "1001sub", "1018sub4"
+     * @param[in] max_num_retries_after_sdo_error After SDO error, the query is repeated max. N times (default: N=2). If the SDO error persists, the can driver is shutdown and restarted.
      * @param[out] output_message informational message in case of errors (responce from canopen service)
      * @param[out] output_value value of the object (responce from canopen service)
      *
      * @return true, if query successful, otherwise false.
      */
-    static bool queryCanObject(ros::NodeHandle &nh, const std::string & node_id, const std::string & objectidx,
+    static bool queryCanObject(ros::NodeHandle &nh, const std::string & node_id, const std::string & objectidx, int max_num_retries_after_sdo_error,
       std::string & output_message, std::string & output_value);
 
     /*

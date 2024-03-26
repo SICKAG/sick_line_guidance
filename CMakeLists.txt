@@ -303,6 +303,7 @@ install(FILES
   ols/SICK_OLS20_CO.eds
   ols/sick_line_guidance_ols10.yaml
   ols/sick_line_guidance_ols20.yaml
+  ols/sick_line_guidance_ols20_twin.yaml
   test/cfg/sick_canopen_simu_cfg.xml
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )

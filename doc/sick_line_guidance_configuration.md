@@ -219,3 +219,14 @@ in the terminal. Example to write value 0x01 to object 2001sub5 (sensorFlipped):
 rosservice call /driver/set_object "{node: 'node1', object: '2001sub5', value: '0x01', cached: false}"
 ```
 This command results in a can upload command using a SDO with object 2001sub5.
+
+## Configuration of CAN node id
+
+The node id of a CAN device can be configured e.b. with [PCAN-View](https://www.peak-system.com/PCAN-View.242.0.html):<br/>
+![screenshot01.png](pcan-config/screenshot01.png)<br/>
+![screenshot02.png](pcan-config/screenshot02.png)<br/>
+
+## Installation and bus termination
+
+The following screenshot shows the installation and bus termination for two OLS devices:<br/>
+![screenshot03.png](pcan-config/screenshot03.png)

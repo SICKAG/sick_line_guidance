@@ -73,10 +73,12 @@
  * @param[in] schedule_publish_delay  MLS and OLS measurement message are scheduled to be published 5 milliseconds after first PDO is received
  * @param[in] max_publish_delay MLS and OLS measurement message are scheduled to be published max. 2*20 milliseconds after first PDO is received, even if a sdo request is pending (max. 2 * tpdo rate)
  * @param[in] query_jitter jitter in seconds (default: 10 ms), i.e. a sdo is requested, if the query is pending and the last successful query is out of the time jitter.
+ * @param[in] max_num_retries_after_sdo_error After SDO error, the query is repeated max. N times (default: N=2). If the SDO error persists, the can driver is shutdown and restarted.
  * By default, a sdo request is send, if the query is pending and not done within the last 10 ms.
  */
-sick_line_guidance::CanSubscriber::MeasurementHandler::MeasurementHandler(ros::NodeHandle &nh, const std::string &can_nodeid, int initial_sensor_state, double max_publish_rate, double max_query_rate, double schedule_publish_delay, double max_publish_delay, double query_jitter)
-  : m_nh(nh), m_can_nodeid(can_nodeid), m_max_publish_rate(ros::Rate(max_publish_rate)), m_max_sdo_query_rate(ros::Rate(max_query_rate)), m_schedule_publish_delay(ros::Duration(schedule_publish_delay)), m_max_publish_delay(ros::Duration(max_publish_delay))
+sick_line_guidance::CanSubscriber::MeasurementHandler::MeasurementHandler(ros::NodeHandle &nh, const std::string &can_nodeid, int max_num_retries_after_sdo_error, int initial_sensor_state, double max_publish_rate, double max_query_rate, double schedule_publish_delay, double max_publish_delay, double query_jitter)
+  : m_nh(nh), m_can_nodeid(can_nodeid), m_max_publish_rate(ros::Rate(max_publish_rate)), m_max_sdo_query_rate(ros::Rate(max_query_rate)), 
+    m_schedule_publish_delay(ros::Duration(schedule_publish_delay)), m_max_publish_delay(ros::Duration(max_publish_delay)), m_max_num_retries_after_sdo_error(max_num_retries_after_sdo_error)
 {
   // initialize MLS/OLS sensor states
   sick_line_guidance::MsgUtil::zero(m_mls_state);
@@ -180,15 +182,15 @@ void sick_line_guidance::CanSubscriber::MeasurementHandler::runMeasurementSDOque
   while(ros::ok())
   {
     // Query SDOs if required
-    querySDOifPending<uint32_t, uint32_t>(m_ols_query_extended_code,         "2021sub9", m_ols_state.extended_code,         1);      // OLS: query object 0x2021sub9 (extended code, UINT32) in object dictionary by SDO
-    querySDOifPending<uint8_t,  uint16_t>(m_ols_query_device_status_u8,      "2018",     m_ols_state.dev_status,            1);      // OLS20: query object 0x2018 (device status register, UINT8) in object dictionary by SDO
-    querySDOifPending<uint16_t, uint16_t>(m_ols_query_device_status_u16,     "2018",     m_ols_state.dev_status,            1);      // OLS10: query object 0x2018 (device status register, UINT16) in object dictionary by SDO
-    querySDOifPending<uint8_t,  uint8_t> (m_ols_query_error_register,        "1001",     m_ols_state.error,                 1);      // OLS: query object 0x1001 (error register, UINT8) in object dictionary by SDO
-    querySDOifPending<int16_t,  float>   (m_ols_query_barcode_center_point,  "2021subA", m_ols_state.barcode_center_point,  0.001f); // OLS20 only: query object 2021subA (barcode center point, INT16) in object dictionary by SDO
-    querySDOifPending<uint8_t,  uint8_t> (m_ols_query_quality_of_lines,      "2021subB", m_ols_state.quality_of_lines,      1);      // OLS20 only: query object 2021subB (quality of lines, UINT8) in object dictionary by SDO
-    querySDOifPending<uint8_t,  uint8_t> (m_ols_query_intensity_of_lines[0], "2023sub1", m_ols_state.intensity_of_lines[0], 1);      // OLS20 only: query object 2023sub1 (intensity line 1, UINT8)
-    querySDOifPending<uint8_t,  uint8_t> (m_ols_query_intensity_of_lines[1], "2023sub2", m_ols_state.intensity_of_lines[1], 1);      // OLS20 only: query object 2023sub2 (intensity line 2, UINT8)
-    querySDOifPending<uint8_t,  uint8_t> (m_ols_query_intensity_of_lines[2], "2023sub3", m_ols_state.intensity_of_lines[2], 1);      // OLS20 only: query object 2023sub3 (intensity line 3, UINT8)
+    querySDOifPending<uint32_t, uint32_t>(m_ols_query_extended_code,         "2021sub9", m_max_num_retries_after_sdo_error, m_ols_state.extended_code,         1);      // OLS: query object 0x2021sub9 (extended code, UINT32) in object dictionary by SDO
+    querySDOifPending<uint8_t,  uint16_t>(m_ols_query_device_status_u8,      "2018",     m_max_num_retries_after_sdo_error, m_ols_state.dev_status,            1);      // OLS20: query object 0x2018 (device status register, UINT8) in object dictionary by SDO
+    querySDOifPending<uint16_t, uint16_t>(m_ols_query_device_status_u16,     "2018",     m_max_num_retries_after_sdo_error, m_ols_state.dev_status,            1);      // OLS10: query object 0x2018 (device status register, UINT16) in object dictionary by SDO
+    querySDOifPending<uint8_t,  uint8_t> (m_ols_query_error_register,        "1001",     m_max_num_retries_after_sdo_error, m_ols_state.error,                 1);      // OLS: query object 0x1001 (error register, UINT8) in object dictionary by SDO
+    querySDOifPending<int16_t,  float>   (m_ols_query_barcode_center_point,  "2021subA", m_max_num_retries_after_sdo_error, m_ols_state.barcode_center_point,  0.001f); // OLS20 only: query object 2021subA (barcode center point, INT16) in object dictionary by SDO
+    querySDOifPending<uint8_t,  uint8_t> (m_ols_query_quality_of_lines,      "2021subB", m_max_num_retries_after_sdo_error, m_ols_state.quality_of_lines,      1);      // OLS20 only: query object 2021subB (quality of lines, UINT8) in object dictionary by SDO
+    querySDOifPending<uint8_t,  uint8_t> (m_ols_query_intensity_of_lines[0], "2023sub1", m_max_num_retries_after_sdo_error, m_ols_state.intensity_of_lines[0], 1);      // OLS20 only: query object 2023sub1 (intensity line 1, UINT8)
+    querySDOifPending<uint8_t,  uint8_t> (m_ols_query_intensity_of_lines[1], "2023sub2", m_max_num_retries_after_sdo_error, m_ols_state.intensity_of_lines[1], 1);      // OLS20 only: query object 2023sub2 (intensity line 2, UINT8)
+    querySDOifPending<uint8_t,  uint8_t> (m_ols_query_intensity_of_lines[2], "2023sub3", m_max_num_retries_after_sdo_error, m_ols_state.intensity_of_lines[2], 1);      // OLS20 only: query object 2023sub3 (intensity line 3, UINT8)
     // Clear all pending status
     m_ols_query_extended_code.pending() = false;
     m_ols_query_device_status_u8.pending() = false;
@@ -206,13 +208,14 @@ void sick_line_guidance::CanSubscriber::MeasurementHandler::runMeasurementSDOque
 /*
  * @brief queries an object in the object dictionary by SDO and returns its value.
  * @param[in] can_object_idx object index in object dictionary, f.e. "2018" (OLS device status) or "2021sub9" (OLS extended code)
+ * @param[in] max_num_retries_after_sdo_error After SDO error, the query is repeated max. N times (default: N=2). If the SDO error persists, the can driver is shutdown and restarted.
  * @param[out] can_object_value object value from SDO response
  * @return true on success (can_object_value set to objects value), false otherwise (can_object_value not set)
  */
-bool sick_line_guidance::CanSubscriber::MeasurementHandler::querySDO(const std::string & can_object_idx, uint8_t & can_object_value)
+bool sick_line_guidance::CanSubscriber::MeasurementHandler::querySDO(const std::string & can_object_idx, int max_num_retries_after_sdo_error, uint8_t & can_object_value)
 {
   std::string can_object_entry = "";
-  if(querySDO(can_object_idx, can_object_entry) && convertSDOresponse(can_object_entry, can_object_value))
+  if(querySDO(can_object_idx, max_num_retries_after_sdo_error, can_object_entry) && convertSDOresponse(can_object_entry, can_object_value))
    return true;
   ROS_ERROR_STREAM("querySDO(" << can_object_idx << ",uint8_t) failed, value=" << sick_line_guidance::MsgUtil::toHexString(can_object_value) );
   return false;
@@ -221,14 +224,15 @@ bool sick_line_guidance::CanSubscriber::MeasurementHandler::querySDO(const std::
 /*
  * @brief queries an object in the object dictionary by SDO and returns its value.
  * @param[in] can_object_idx object index in object dictionary, f.e. "2018" (OLS device status) or "2021sub9" (OLS extended code)
+ * @param[in] max_num_retries_after_sdo_error After SDO error, the query is repeated max. N times (default: N=2). If the SDO error persists, the can driver is shutdown and restarted.
  * @param[out] can_object_value object value from SDO response
  * @return true on success (can_object_value set to objects value), false otherwise (can_object_value not set)
  */
-bool sick_line_guidance::CanSubscriber::MeasurementHandler::querySDO(const std::string & can_object_idx, int16_t & can_object_value)
+bool sick_line_guidance::CanSubscriber::MeasurementHandler::querySDO(const std::string & can_object_idx, int max_num_retries_after_sdo_error, int16_t & can_object_value)
 {
   int32_t value = 0;
   std::string can_object_entry = "";
-  if(querySDO(can_object_idx, can_object_entry) && convertSDOresponse(can_object_entry, value) && value >= INT16_MIN && value <= INT16_MAX)
+  if(querySDO(can_object_idx, max_num_retries_after_sdo_error, can_object_entry) && convertSDOresponse(can_object_entry, value) && value >= INT16_MIN && value <= INT16_MAX)
   {
     can_object_value = (int16_t)value;
     return true;
@@ -240,14 +244,15 @@ bool sick_line_guidance::CanSubscriber::MeasurementHandler::querySDO(const std::
 /*
  * @brief queries an object in the object dictionary by SDO and returns its value.
  * @param[in] can_object_idx object index in object dictionary, f.e. "2018" (OLS device status) or "2021sub9" (OLS extended code)
+ * @param[in] max_num_retries_after_sdo_error After SDO error, the query is repeated max. N times (default: N=2). If the SDO error persists, the can driver is shutdown and restarted.
  * @param[out] can_object_value object value from SDO response
  * @return true on success (can_object_value set to objects value), false otherwise (can_object_value not set)
  */
-bool sick_line_guidance::CanSubscriber::MeasurementHandler::querySDO(const std::string & can_object_idx, uint16_t & can_object_value)
+bool sick_line_guidance::CanSubscriber::MeasurementHandler::querySDO(const std::string & can_object_idx, int max_num_retries_after_sdo_error, uint16_t & can_object_value)
 {
   uint32_t value = 0;
   std::string can_object_entry = "";
-  if(querySDO(can_object_idx, can_object_entry) && convertSDOresponse(can_object_entry, value) && value <= UINT16_MAX)
+  if(querySDO(can_object_idx, max_num_retries_after_sdo_error, can_object_entry) && convertSDOresponse(can_object_entry, value) && value <= UINT16_MAX)
   {
     can_object_value = (uint16_t)value;
     return true;
@@ -259,13 +264,14 @@ bool sick_line_guidance::CanSubscriber::MeasurementHandler::querySDO(const std::
 /*
  * @brief queries an object in the object dictionary by SDO and returns its value.
  * @param[in] can_object_idx object index in object dictionary, f.e. "2018" (OLS device status) or "2021sub9" (OLS extended code)
+ * @param[in] max_num_retries_after_sdo_error After SDO error, the query is repeated max. N times (default: N=2). If the SDO error persists, the can driver is shutdown and restarted.
  * @param[out] can_object_value object value from SDO response
  * @return true on success (can_object_value set to objects value), false otherwise (can_object_value not set)
  */
-bool sick_line_guidance::CanSubscriber::MeasurementHandler::querySDO(const std::string & can_object_idx, uint32_t & can_object_value)
+bool sick_line_guidance::CanSubscriber::MeasurementHandler::querySDO(const std::string & can_object_idx, int max_num_retries_after_sdo_error, uint32_t & can_object_value)
 {
   std::string can_object_entry = "";
-  if(querySDO(can_object_idx, can_object_entry) && convertSDOresponse(can_object_entry, can_object_value))
+  if(querySDO(can_object_idx, max_num_retries_after_sdo_error, can_object_entry) && convertSDOresponse(can_object_entry, can_object_value))
     return true;
   ROS_ERROR_STREAM("querySDO(" << can_object_idx << ",uint32_t) failed, value=" << sick_line_guidance::MsgUtil::toHexString(can_object_value) );
   return false;
@@ -274,14 +280,15 @@ bool sick_line_guidance::CanSubscriber::MeasurementHandler::querySDO(const std::
 /*
  * @brief queries an object in the object dictionary by SDO and returns its value.
  * @param[in] can_object_idx object index in object dictionary, f.e. "2018" (OLS device status) or "2021sub9" (OLS extended code)
+ * @param[in] max_num_retries_after_sdo_error After SDO error, the query is repeated max. N times (default: N=2). If the SDO error persists, the can driver is shutdown and restarted.
  * @param[out] can_object_value object value from SDO response
  * @return true on success (can_object_value set to objects value), false otherwise (can_object_value not set)
  */
-bool sick_line_guidance::CanSubscriber::MeasurementHandler::querySDO(const std::string & can_object_idx, std::string & can_object_value)
+bool sick_line_guidance::CanSubscriber::MeasurementHandler::querySDO(const std::string & can_object_idx, int max_num_retries_after_sdo_error, std::string & can_object_value)
 {
   std::string can_msg = "";
   can_object_value = "";
-  bool sdo_success = sick_line_guidance::CanopenChain::queryCanObject(m_nh, m_can_nodeid, can_object_idx, can_msg, can_object_value);
+  bool sdo_success = sick_line_guidance::CanopenChain::queryCanObject(m_nh, m_can_nodeid, can_object_idx, max_num_retries_after_sdo_error, can_msg, can_object_value);
   if(sdo_success)
   {
     ROS_INFO_STREAM("sick_line_guidance::CanopenChain::queryCanObject(" << m_can_nodeid << "): [" << can_object_idx << "]=" << can_object_value );
@@ -455,11 +462,13 @@ void sick_line_guidance::CanSubscriber::MeasurementHandler::schedulePublishOLSMe
  * Constructor.
  * @param[in] nh ros::NodeHandle
  * @param[in] can_nodeid can id for canopen_chain_node, f.e. "node1"
+ * @param[in] max_num_retries_after_sdo_error After SDO error, the query is repeated max. N times (default: N=2). If the SDO error persists, the can driver is shutdown and restarted.
+ * @param[in] max_sdo_rate max. sdo query and publish rate
  * @param[in] initial_sensor_state initial sensor state (f.e. 0x07 for 3 detected lines, or (1 << 4) to indicate sensor error)
  * @param[in] subscribe_queue_size buffer size for ros messages
  */
-sick_line_guidance::CanSubscriber::CanSubscriber(ros::NodeHandle & nh, const std::string & can_nodeid, int initial_sensor_state, int subscribe_queue_size)
-  : m_measurement(nh, can_nodeid, initial_sensor_state), m_subscribe_queue_size(subscribe_queue_size)
+sick_line_guidance::CanSubscriber::CanSubscriber(ros::NodeHandle & nh, const std::string & can_nodeid, int max_num_retries_after_sdo_error, double max_sdo_rate, int initial_sensor_state, int subscribe_queue_size)
+  : m_measurement(nh, can_nodeid, max_num_retries_after_sdo_error, initial_sensor_state, max_sdo_rate, max_sdo_rate), m_subscribe_queue_size(subscribe_queue_size)
 {
 }
 

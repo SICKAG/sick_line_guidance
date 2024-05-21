@@ -179,10 +179,9 @@ Device specific settings can be configured in section "nodes/node1/dcf_overlay".
 Set the CAN-ID of your device with `id: 0x0A # CAN-Node-ID of MLS (default: 0x0A)` and
 configure device specific settings in section `dcf_overlay` by appending a line `"objectindex": "parametervalue"` for each parameter.
 
-## yaml configuration for multiple can devices
+## Configuration for multiple devices
 
-If you want to use multiple can devices (MLS or OLS) on one system, you have to append multiple nodes in your yaml-file. Each node must contain the configuration of
-one can device as shown above. Just make sure to use different node names for each device:
+If you want to use multiple can devices (MLS or OLS) on one system, you have to append multiple nodes in your yaml-file. Each node must contain the configuration of one can device as shown above. Make sure to use different node names for each device:
 ```yaml
 nodes:
   node1:
@@ -191,10 +190,12 @@ nodes:
     id: ... # CAN-ID for the 2. device
 ```
 
-If you configure different measurement topics for each can device (f.e. `sick_topic: "ols20-1"` for the first OLS20 and `sick_topic: "ols20-1"` for the second OLS20 device),
-you have to start multiple sick_line_guidance_cloud_publisher nodes, too. Otherwise, measurement messges from this device can't be transformed to PointCloud2 messsages.
+If you configure different measurement topics for each can device (f.e. `sick_topic: "ols20A"` for the first OLS20 and `sick_topic: "ols20B"` for the second OLS20 device), you have to start multiple sick_line_guidance_cloud_publisher nodes, too. Otherwise, measurement messges from this device can't be transformed to PointCloud2 messsages.
+
 Append multiple sick_line_guidance_cloud_publisher nodes in file sick_line_guidance.launch, each sick_line_guidance_cloud_publisher node configured with the corresponding 
 ros topic in parameter `"mls_topic_publish"` resp. `"ols_topic_publish"`.
+
+Launchfile [sick_line_guidance_ols20_twin.launch](../launch/sick_line_guidance_ols20_twin.launch) and yaml-configuration [sick_line_guidance_ols20_twin.yaml](../ols/sick_line_guidance_ols20_twin.yaml) show an example how to run two OLS20 devices with can node ids 0x0A and 0x0B. 
 
 ## Read and write parameter during runtime
 

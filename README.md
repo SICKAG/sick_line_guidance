@@ -86,8 +86,8 @@ source ./install/setup.bash
 ```
 after modifications.
 
-See https://github.com/SICKAG/sick_line_guidance/tree/master/doc/sick_line_guidance_configuration.md for details about the 
-sick_line_guidance driver and sensor configuration.    
+See [sick_line_guidance configuration](doc/sick_line_guidance_configuration.md) for details about the 
+sick_line_guidance driver and sensor configuration. See [Configuration for multiple devices](doc/sick_line_guidance_configuration.md#configuration-for-multiple-devices) for the configuration of multiple devices, f.e. of two OLS20 devices.
 
 # Starting
 

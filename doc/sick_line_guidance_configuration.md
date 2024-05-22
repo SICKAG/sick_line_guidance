@@ -195,7 +195,16 @@ If you configure different measurement topics for each can device (f.e. `sick_to
 Append multiple sick_line_guidance_cloud_publisher nodes in file sick_line_guidance.launch, each sick_line_guidance_cloud_publisher node configured with the corresponding 
 ros topic in parameter `"mls_topic_publish"` resp. `"ols_topic_publish"`.
 
-Launchfile [sick_line_guidance_ols20_twin.launch](../launch/sick_line_guidance_ols20_twin.launch) and yaml-configuration [sick_line_guidance_ols20_twin.yaml](../ols/sick_line_guidance_ols20_twin.yaml) show an example how to run two OLS20 devices with can node ids 0x0A and 0x0B. 
+Launchfile [sick_line_guidance_ols20_twin.launch](../launch/sick_line_guidance_ols20_twin.launch) and yaml-configuration [sick_line_guidance_ols20_twin.yaml](../ols/sick_line_guidance_ols20_twin.yaml) show an example how to run two OLS20 devices with can node ids 0x0A and 0x0B. Run the example with
+```
+rosrun rviz rviz &
+roslaunch -v --screen sick_line_guidance sick_line_guidance_ols20_twin.launch
+```
+The point clouds of both OLS20 devices will be published on topic "cloudA" and "cloudB" with frame ids "olsA_frame" and "olsB_frame". Use a static_transform_publisher to setup a transform for each OLS frame to a reference coordinate system, e.g.
+```
+rosrun tf static_transform_publisher 0 0 0 0 0 0 olsA_frame cloud 10
+rosrun tf static_transform_publisher 0 0 0 0 0 0 olsB_frame cloud 10
+```
 
 ## Read and write parameter during runtime
 

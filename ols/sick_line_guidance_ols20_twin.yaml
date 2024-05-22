@@ -19,7 +19,7 @@ nodes:
     
     # sick_line_guidance configuration of this node:
     sick_device_family: "OLS20"            # can devices currently supported: "OLS10", "OLS20" or "MLS"
-    sick_topic: "ols"                      # OLS_Measurement messages are published in topic "/ols"
+    sick_topic: "olsA"                     # OLS_Measurement messages are published in topic "/ols"
     sick_frame_id: "ols20A_measurement_frame" # OLS_Measurement messages are published with frame_id "ols_measurement_frame"
 
     # device configuration of writable parameter by dcf_overlay: "objectindex": "parametervalue"
@@ -39,6 +39,6 @@ nodes:
     
     # sick_line_guidance configuration of this node:
     sick_device_family: "OLS20"            # can devices currently supported: "OLS10", "OLS20" or "MLS"
-    sick_topic: "ols"                      # OLS_Measurement messages are published in topic "/ols"
+    sick_topic: "olsB"                     # OLS_Measurement messages are published in topic "/ols"
     sick_frame_id: "ols20B_measurement_frame" # OLS_Measurement messages are published with frame_id "ols_measurement_frame"
 

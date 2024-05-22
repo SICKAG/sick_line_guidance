@@ -294,6 +294,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
 install(FILES
   launch/sick_line_guidance.launch
   launch/sick_line_guidance_can2ros_node.launch
+  launch/sick_line_guidance_ols20_twin.launch
   launch/sick_line_guidance_ros2can_node.launch
   launch/sick_canopen_simu.launch
   mls/SICK-MLS.eds
